@@ -9,20 +9,20 @@ number:
 date:
 consensus: true
 v: 3
-area: Security
-workgroup: EMU Working Group
+area: "Security"
+workgroup: "EAP Method Update"
 keyword:
  - EAP
  - PAKE
  - post-quantum
  - password authentication
 venue:
-  group: EMU
-  type: Working Group
-  mail: emu@ietf.org
-  arch: https://mailarchive.ietf.org/arch/browse/emu/
-  github: TODO/TODO
-  latest: https://TODO.example/draft-todo-emu-eap-pqpake.html
+  group: "EAP Method Update"
+  type: "Working Group"
+  mail: "emu@ietf.org"
+  arch: "https://mailarchive.ietf.org/arch/browse/emu"
+  github: "hannestschofenig/draft-tschofenig-emu-pqpake"
+  latest: "https://hannestschofenig.github.io/draft-tschofenig-emu-pqpake/draft-tschofenig-emu-pqpake.html"
 
 author:
 -
