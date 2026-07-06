@@ -2,7 +2,7 @@
 
 
 
-EMU Working Group                                          H. Tschofenig
+EAP Method Update                                          H. Tschofenig
 Internet-Draft                                                  UniBw M.
 Intended status: Experimental                                6 July 2026
 Expires: 7 January 2027
@@ -25,17 +25,18 @@ About This Document
    This note is to be removed before publishing as an RFC.
 
    The latest revision of this draft can be found at
-   https://TODO.example/draft-todo-emu-eap-pqpake.html.  Status
-   information for this document may be found at
-   https://datatracker.ietf.org/doc/draft-tschofenig-emu-pqpake/.
+   https://hannestschofenig.github.io/draft-tschofenig-emu-pqpake/draft-
+   tschofenig-emu-pqpake.html.  Status information for this document may
+   be found at https://datatracker.ietf.org/doc/draft-tschofenig-emu-
+   pqpake/.
 
-   Discussion of this document takes place on the EMU Working Group
-   mailing list (mailto:emu@ietf.org), which is archived at
-   https://mailarchive.ietf.org/arch/browse/emu/.  Subscribe at
+   Discussion of this document takes place on the EAP Method Update
+   Working Group mailing list (mailto:emu@ietf.org), which is archived
+   at https://mailarchive.ietf.org/arch/browse/emu.  Subscribe at
    https://www.ietf.org/mailman/listinfo/emu/.
 
    Source for this draft and an issue tracker can be found at
-   https://github.com/TODO/TODO.
+   https://github.com/hannestschofenig/draft-tschofenig-emu-pqpake.
 
 Status of This Memo
 
@@ -78,10 +79,11 @@ Table of Contents
    6.  Packet Format
      6.1.  Identity Types
      6.2.  Start Payloads
-     6.3.  PAKE1 Payloads
-     6.4.  PAKE2 Payloads
-     6.5.  Confirm Payloads
-     6.6.  Failure Payload
+     6.3.  CPaceOQUAKE+ Message Mapping
+     6.4.  PAKE1 Payloads
+     6.5.  PAKE2 Payloads
+     6.6.  Confirm Payloads
+     6.7.  Failure Payload
    7.  Fragmentation
    8.  Key Derivation
    9.  Security Considerations
@@ -160,9 +162,9 @@ Table of Contents
 
    Config:  A registered set of CPaceOQUAKE+ algorithms and parameters.
 
-   Method key:  The 32-octet key output by the CPaceOQUAKE+ password
-      confirmation stage.  EAP-PQPAKE expands this value to the MSK and
-      EMSK.
+   Method key:  The 32-octet client_key or server_key output by the
+      CPaceOQUAKE+ password confirmation stage.  EAP-PQPAKE expands this
+      value to the MSK and EMSK.
 
    uint8, uint16, uint32:  Unsigned integers encoded in network byte
       order.
@@ -175,9 +177,8 @@ Table of Contents
    EAP is a lock-step request/response protocol in which the EAP server
    sends each Request and the EAP peer sends the corresponding Response.
    CPaceOQUAKE+ is initiated by the client.  EAP-PQPAKE therefore uses
-   an empty server request to solicit the first CPaceOQUAKE+ message
-   from the peer after identity and configuration negotiation have
-   completed.
+   an empty server request to solicit the first CPaceOQUAKE+ flight from
+   the peer after identity and configuration negotiation have completed.
 
    A successful EAP-PQPAKE exchange has the following shape:
 
@@ -191,18 +192,18 @@ Table of Contents
 
                              EAP-PQPAKE-PAKE1/Request
                      <---------------------------------
-    EAP-PQPAKE-PAKE1/Response  (CPaceOQUAKE+ msg1)
+    EAP-PQPAKE-PAKE1/Response  (s1, msg1)
     --------------------------------->
 
                              EAP-PQPAKE-PAKE2/Request
-                             (CPaceOQUAKE+ msg2)
+                             (s2, msg2, msg3)
                      <---------------------------------
-    EAP-PQPAKE-PAKE2/Response  (CPaceOQUAKE+ msg3)
+    EAP-PQPAKE-PAKE2/Response  (msg4)
     --------------------------------->
 
-                             EAP-PQPAKE-Confirm/Request (PC challenge)
+                             EAP-PQPAKE-Confirm/Request (chal)
                      <---------------------------------
-    EAP-PQPAKE-Confirm/Response  (PC response)
+    EAP-PQPAKE-Confirm/Response  (resp)
     --------------------------------->
 
                              EAP-Success
@@ -210,10 +211,11 @@ Table of Contents
 
    The Start exchange negotiates one CPaceOQUAKE+ configuration and
    identifies the peer and server.  After receiving the peer identity,
-   the server locates the stored verifier, public key, and salt for that
-   peer and selected configuration.  The PAKE1 and PAKE2 exchanges carry
-   the three CPaceOQUAKE messages.  The Confirm exchange carries the
-   password confirmation challenge and response.
+   the server locates the stored verifier, password-confirmation KEM
+   public key, and salt for that peer and selected configuration.  The
+   PAKE1 and PAKE2 exchanges carry the three CPaceOQUAKE flights: (s1,
+   msg1), (s2, msg2, msg3), and msg4.  The Confirm exchange carries the
+   CPaceOQUAKE+ password confirmation messages chal and resp.
 
    On success, both endpoints derive the EAP MSK and EMSK from the
    CPaceOQUAKE+ method key.  On failure, either endpoint can send an
@@ -236,10 +238,11 @@ Table of Contents
    MUST NOT be applied to ciphertexts unless the selected CPaceOQUAKE+
    configuration explicitly requires it.
 
-   The peer computes the CPaceOQUAKE+ verifier material from PRS, salt,
-   U, and S using GenVerifierMaterial.  The server stores the salt,
-   verifier, and KEM public key for the peer.  The server MUST NOT store
-   the seed that CPaceOQUAKE+ derives from the password.
+   The peer computes the CPaceOQUAKE+ verifier material (v, seed) from
+   PRS, salt, U, and S using GenVerifierMaterial.  The server stores the
+   salt, verifier v, and password-confirmation KEM public key pk for the
+   peer.  The server MUST NOT store the seed that CPaceOQUAKE+ derives
+   from the password.
 
    The CPaceOQUAKE+ session identifier sid is:
 
@@ -268,7 +271,9 @@ Table of Contents
    EAP Code, Identifier, Length, Type, fragmentation flags, Total-
    Length, and fragmentation acknowledgements.  This binds the selected
    configuration, identities, salt, server nonce, and all CPaceOQUAKE
-   messages into the password confirmation stage.
+   messages into the password confirmation stage.  This value is used as
+   the transcript input to the CPaceOQUAKE+ PC-Challenge and PC-Response
+   functions.
 
    An implementation MUST abort the exchange if any CPaceOQUAKE+
    operation raises an authentication error, if a received cryptographic
@@ -425,9 +430,53 @@ Table of Contents
    Selected-Config MUST be one of the Config-ID values in the Start/
    Request.  Peer-ID is an opaque16 field preceded by Peer-IDType.  The
    server uses Selected-Config and Peer-ID to locate the peer's stored
-   salt, verifier, and KEM public key.
+   salt, verifier, and password-confirmation KEM public key.
 
-6.3.  PAKE1 Payloads
+6.3.  CPaceOQUAKE+ Message Mapping
+
+   EAP-PQPAKE carries the five CPaceOQUAKE+ protocol messages as EAP
+   payload fields.  The first three fields carry the encoded messages of
+   the CPaceOQUAKE subprotocol inside CPaceOQUAKE+.  The EAP exchanges
+   map to the CPaceOQUAKE+ functions in [I-D.vos-cfrg-pqpake] as
+   follows:
+
+     +==================+========+==================================+
+     | EAP-PQPAKE field | Sender | Source value                     |
+     +==================+========+==================================+
+     | CPaceOQUAKE-msg1 | peer   | (s1, msg1) from CPaceOQUAKE.Init |
+     +------------------+--------+----------------------------------+
+     | CPaceOQUAKE-msg2 | server | (s2, msg2, msg3) from            |
+     |                  |        | CPaceOQUAKE.Respond              |
+     +------------------+--------+----------------------------------+
+     | CPaceOQUAKE-msg3 | peer   | msg4 from                        |
+     |                  |        | CPaceOQUAKE.InitiatorFinish      |
+     +------------------+--------+----------------------------------+
+     | PC-Challenge     | server | challenge from PC-Challenge      |
+     +------------------+--------+----------------------------------+
+     | PC-Response      | peer   | response from PC-Response        |
+     +------------------+--------+----------------------------------+
+
+                                 Table 3
+
+   Here, v is the CPaceOQUAKE+ verifier for the selected peer and
+   configuration.  The peer computes v and seed from PRS, salt, U, and S
+   using GenVerifierMaterial; the server uses the stored v and password-
+   confirmation KEM public key pk for the peer.  pk is generated during
+   CPaceOQUAKE+ registration.  SK is the symmetric key output by the
+   CPaceOQUAKE phase before password confirmation, and tx is the EAP-
+   PQPAKE password-confirmation transcript defined in Section 4.
+
+   The tuple notation in this table follows the CPaceOQUAKE flow in
+   [I-D.vos-cfrg-pqpake].  On the wire, CPaceOQUAKE-msg1 is the encoded
+   init_msg returned by CPaceOQUAKE.Init, consisting of s1 followed by
+   lv_encode(msg1).  CPaceOQUAKE-msg2 is the encoded resp_msg returned
+   by CPaceOQUAKE.Respond, consisting of s2 followed by lv_encode(msg2)
+   and lv_encode(msg3).  CPaceOQUAKE-msg3 is the msg4 returned by
+   CPaceOQUAKE.InitiatorFinish.  PC-Challenge is invoked with SK, tx,
+   pk, sid, U, and S.  PC-Response is invoked with SK, tx, seed,
+   challenge, sid, U, and S.
+
+6.4.  PAKE1 Payloads
 
    The PAKE1/Request payload is sent by the server:
 
@@ -450,9 +499,11 @@ Table of Contents
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
    CPaceOQUAKE-msg1 is an opaque16 field containing the first
-   CPaceOQUAKE+ message.
+   CPaceOQUAKE+ message.  It is the encoded init_msg returned by
+   CPaceOQUAKE.Init, corresponding to (s1, msg1) in
+   [I-D.vos-cfrg-pqpake].
 
-6.4.  PAKE2 Payloads
+6.5.  PAKE2 Payloads
 
    The PAKE2/Request payload is sent by the server:
 
@@ -468,7 +519,12 @@ Table of Contents
 
    Both fields are encoded as opaque16 values.
 
-6.5.  Confirm Payloads
+   CPaceOQUAKE-msg2 is the encoded resp_msg returned by
+   CPaceOQUAKE.Respond, corresponding to (s2, msg2, msg3) in
+   [I-D.vos-cfrg-pqpake].  CPaceOQUAKE-msg3 is the msg4 returned by
+   CPaceOQUAKE.InitiatorFinish.
+
+6.6.  Confirm Payloads
 
    The Confirm/Request payload is sent by the server:
 
@@ -486,7 +542,7 @@ Table of Contents
    challenge output by CPaceOQUAKE+ PC-Challenge.  PC-Response is the
    response output by CPaceOQUAKE+ PC-Response.
 
-6.6.  Failure Payload
+6.7.  Failure Payload
 
    The Failure payload is a uint32 Failure-Code:
 
@@ -523,7 +579,7 @@ Table of Contents
    | 0xff000000-0xffffffff | Private Use    | Private Use              |
    +-----------------------+----------------+--------------------------+
 
-                                  Table 3
+                                  Table 4
 
    When the peer detects an error, it SHOULD send Failure/Response.  The
    server MUST then send EAP-Failure.  When the server detects an error,
@@ -658,9 +714,10 @@ Table of Contents
    Forward secrecy:  Compromise of the password after an exchange
       completes does not reveal earlier MSK or EMSK values unless the
       attacker also breaks the underlying assumptions for the recorded
-      exchange.  Server compromise that reveals stored verifiers and KEM
-      public keys can enable impersonation according to the CPaceOQUAKE+
-      security model and requires credential reprovisioning.
+      exchange.  Server compromise that reveals stored verifiers and
+      password-confirmation KEM public keys can enable impersonation
+      according to the CPaceOQUAKE+ security model and requires
+      credential reprovisioning.
 
    Downgrade protection:  The selected configuration and the server's
       offered configuration list are included in the EAP-PQPAKE
@@ -676,14 +733,14 @@ Table of Contents
       stable identity plan before provisioning verifiers.
 
    Verifier handling:  The server stores the CPaceOQUAKE+ verifier,
-      salt, and KEM public key.  The password-derived seed used to
-      derive the KEM key pair MUST NOT be stored by the server.
-      Registration and reprovisioning are outside this method and need
-      channel authentication and integrity protection.  The memory-hard
-      password stretching used by CPaceOQUAKE+ hardens password-derived
-      verifier material against offline guessing after verifier
-      compromise; it does not replace online rate limiting for EAP
-      authentication attempts.
+      salt, and password-confirmation KEM public key.  The password-
+      derived seed used to derive the password-confirmation KEM key pair
+      MUST NOT be stored by the server.  Registration and reprovisioning
+      are outside this method and need channel authentication and
+      integrity protection.  The memory-hard password stretching used by
+      CPaceOQUAKE+ hardens password-derived verifier material against
+      offline guessing after verifier compromise; it does not replace
+      online rate limiting for EAP authentication attempts.
 
    Side channels:  CPaceOQUAKE+ discusses timing considerations for
       OQUAKE and ML-KEM processing.  EAP-PQPAKE implementations MUST use
@@ -712,7 +769,7 @@ Table of Contents
                     |  TBD1 | EAP-PQPAKE  | RFC-TBD   |
                     +-------+-------------+-----------+
 
-                                  Table 4
+                                  Table 5
 
    IANA is requested to create the "EAP-PQPAKE Exchange Types" registry.
    The registration policy is Specification Required [RFC8126] for
@@ -733,7 +790,7 @@ Table of Contents
         |        | RISTRETTO255-HKDFSHA256-ARGON2ID  |           |
         +--------+-----------------------------------+-----------+
 
-                                 Table 5
+                                 Table 6
 
    IANA is requested to create the "EAP-PQPAKE Identity Types" registry.
    The registry contains 8-bit values.  The registration policy is
@@ -745,7 +802,7 @@ Table of Contents
    The registry contains 32-bit values.  The registration policy is
    Specification Required for values 0x00000007 through 0xfeffffff.
    Values 0xff000000 through 0xffffffff are for Private Use.  The
-   initial values are listed in Section 6.6.
+   initial values are listed in Section 6.7.
 
 11.  References
 
