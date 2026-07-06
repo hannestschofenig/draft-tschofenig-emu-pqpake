@@ -1,0 +1,2211 @@
+<!DOCTYPE html>
+<html lang="en" class="Internet-Draft">
+<head>
+<meta charset="utf-8">
+<meta content="Common,Latin" name="scripts">
+<meta content="initial-scale=1.0" name="viewport">
+<title>The EAP-PQPAKE Authentication Method</title>
+<meta content="Hannes Tschofenig" name="author">
+<meta content="
+       This document defines EAP-PQPAKE, an Extensible Authentication Protocol
+(EAP) method that uses a hybrid post-quantum password-authenticated key
+exchange.  The method is based on the CPaceOQUAKE+ asymmetric PAKE and
+provides mutual authentication and EAP key export from a password without
+requiring public-key certificates during normal authentication. 
+    " name="description">
+<meta content="xml2rfc 3.34.0" name="generator">
+<meta content="EAP" name="keyword">
+<meta content="PAKE" name="keyword">
+<meta content="post-quantum" name="keyword">
+<meta content="password authentication" name="keyword">
+<meta content="draft-tschofenig-emu-pqpake-latest" name="ietf.draft">
+<!-- Generator version information:
+  xml2rfc 3.34.0
+    Python 3.14.5
+    ConfigArgParse 1.7.5
+    google-i18n-address 3.1.1
+    intervaltree 3.2.1
+    Jinja2 3.1.6
+    lxml 6.1.1
+    natsort 8.4.0
+    platformdirs 4.10.0
+    pycountry 24.6.1
+    PyYAML 6.0.3
+    requests 2.33.1
+    wcwidth 0.8.2
+-->
+<link href="draft-tschofenig-emu-pqpake.xml" rel="alternate" type="application/rfc+xml">
+<link href="#copyright" rel="license">
+<style type="text/css">@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-cyrillic.woff2') format('woff2');
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-cyrillic.woff2') format('woff2');
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: local('Lora SemiBold'), local('Lora-SemiBold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-semibold-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Oxygen Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Oxygen Mono'), local('OxygenMono-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/oxygenmono-regular-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Oxygen Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Oxygen Mono'), local('OxygenMono-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/oxygenmono-regular-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+}
+
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-cyrillic.woff2') format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-greek.woff2') format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-cyrillic.woff2') format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-greek.woff2') format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  color-scheme: light dark;
+  --background-color: #fff;
+  --text-color: #222;
+  --title-color: #191919;
+  --link-color: #2a6496;
+  --highlight-color: #f9f9f9;
+  --line-color: #eee;
+  --pilcrow-weak: #ddd;
+  --pilcrow-strong: #bbb;
+  --small-font-size: 14.5px;
+  --font-mono: 'Oxygen Mono', monospace;
+  --font-title: "Sofia Sans Semi Condensed", sans-serif;
+  scrollbar-color: #bbb #eee;
+}
+body {
+  max-width: 600px;
+  margin: 75px auto;
+  padding: 0 5px;
+  color: var(--text-color);
+  background-color: var(--background-color);
+  font: 16px/22px "Lora", serif;
+  scroll-behavior: smooth;
+}
+
+.ears {
+  display: none;
+}
+
+/* headings */
+section {
+  clear: both;
+}
+.section-number {
+  padding-right: 0.5em;
+}
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-title);
+  font-weight: 680;
+  margin: 0.8em 0 0.3em;
+  font-size-adjust: 0.5;
+  color: var(--title-color);
+}
+h1 {
+  &#title {
+    font-size: 32px;
+    line-height: 40px;
+    clear: both;
+    margin: 1.5em 0 0.2em;
+  }
+  &#rfcnum {
+    margin: 1.5em 0 0.2em;
+    & + h1#title {
+      margin: 0.2em 0;
+    }
+  }
+}
+
+h1, h2, h3 {
+  font-size: 22px;
+  line-height: 27px;
+}
+h4, h5, h6 {
+  font-size: 20px;
+  line-height: 24px;
+}
+
+/* general structure */
+.author {
+  padding-bottom: 0.3em;
+  vertical-align: top;
+}
+#abstract+p {
+  font-size: 18px;
+  line-height: 24px;
+  & code, & samp, & tt {
+    font-size: 16px;
+    line-height: 0;
+  }
+}
+
+p {
+  padding: 0;
+  margin: 0.5em 0;
+  text-align: left;
+}
+div {
+  margin: 0;
+}
+.alignRight {
+  margin: 1em 0;
+  &.art-text {
+    background-color: var(--highlight-color);
+    border: 1px solid var(--line-color);
+    border-radius: 3px;
+    padding: 0.5em 1em 0;
+    margin-bottom: 0.5em;
+    & pre {
+      padding: 0;
+      width: auto;
+    }
+  }
+  & > *:first-child {
+    border: none;
+    margin: 0;
+    float: right;
+    clear: both;
+  }
+  & > *:nth-child(2) {
+    clear: both;
+    display: block;
+    border: none;
+  }
+}
+svg {
+  display: block;
+  /* font-family isn't space-separated, but =~ will have to do */
+  &[font-family~="monospace" i], & [font-family~="monospace" i] {
+    font-family: var(--font-mono);
+  }
+}
+.alignCenter {
+  margin: 1em 0;
+  &.art-text {
+    background-color: var(--highlight-color);
+    border: 1px solid var(--line-color);
+    border-radius: 3px;
+    padding: 0.5em 1em 0;
+    margin-bottom: 0.5em;
+    & pre {
+      padding: 0;
+      width: auto;
+    }
+  }
+  & > *:first-child {
+    border: none;
+    /* this isn't optimal, but it's an existence proof.  PrinceXML doesn't
+       support flexbox yet.
+    */
+    display: table;
+    margin: 0 auto;
+  }
+}
+
+/* lists */
+ol, ul {
+  padding: 0;
+  margin: 0 0 0.5em 2em;
+  & :is(ol, ul) {
+    margin-left: 1em;
+  }
+}
+li {
+  margin: 0 0 0.25em 0;
+}
+ul.empty, .ulEmpty {
+  list-style-type: none;
+  & li {
+    margin-top: 0.5em;
+  }
+}
+:is(ul, ol).compact, .ulCompact, .olCompact {
+  margin: 0 0 0 2em;
+  & li {
+    margin: 0;
+    & :first-child { margin-top: 0; }
+    & :last-child { margin-bottom: 0; }
+  }
+}
+
+/* definition lists */
+dl {
+  clear: left;
+  --indent: 3ch;
+  /* --indent: attr(indent ch); not supported in any browser, but we can dream */
+  &.olPercent {
+    --indent: 5ch;
+    & > dt {
+      min-width: calc(var(--indent) - 2ch);
+      float: none;
+    }
+  }
+
+  dl > dd > & {
+    margin-top: 0.5em;
+    margin-bottom: 0;
+  }
+
+  &:not(.dlNewline) > dt {
+    float: left;
+    margin-right: 2ch;
+    min-width: 8ch;
+  }
+  & > dd {
+    margin-bottom: .8em;
+    margin-left: var(--indent) !important; /* stupid element overrides */
+    min-height: 2ex;
+  }
+}
+:is(dl.compact, .dlCompact) > dd {
+  margin-bottom: 0;
+  & > :is(:first-child, .break:first-child + *) {
+    margin-top: 0;
+  }
+  & > :is(:last-child) {
+    margin-bottom: 0;
+  }
+}
+:is(dd, span).break {
+  display: none;
+}
+
+/* links */
+a {
+  text-decoration: none;
+  &[href] {
+    color: var(--link-color);
+    &:hover { text-decoration: underline; }
+    &.selfRef {
+      color: var(--text-color);
+      &:hover {
+        text-decoration: none;
+        background-color: var(--highlight-color);
+      }
+    }
+  }
+}
+.iref + a[href].internal {
+  color: var(--text-color);
+}
+a.xref:is(.cite, .auto), :is(#status-of-memo, #copyright) a {
+  white-space: nowrap;
+}
+
+/* Figures */
+tt, code, pre {
+  background-color: var(--highlight-color);
+  font: 14px/22px var(--font-mono);
+}
+tt, code {
+  /* changing the font for inline elements leads to different ascender
+     and descender heights; as we want to retain baseline alignment,
+     remove leading to avoid altering the final height of lines
+     note: this fails if these blocks take an entire line,
+     a different solution would be great */
+  line-height: 0;
+}
+:is(h1, h2, h3, h4, h5, h6) :is(tt, code) {
+  font-size: 84%;
+}
+pre {
+  border: 1px solid var(--line-color);
+  font-size: 13.5px;
+  line-height: 16px;
+  letter-spacing: -0.2px;
+  margin: 5px;
+  padding: 5px;
+}
+img {
+  max-width: 100%;
+}
+figure {
+  margin: 0.5em 0;
+  padding: 0;
+  & blockquote {
+    margin: 0.8em 0.4em 0.4em;
+  }
+}
+figcaption, caption {
+  font-style: italic;
+  margin: 0.5em 1.5em;
+  text-align: left;
+  caption-side: bottom;
+}
+@media screen {
+  /* Auto-collapse boilerplate. */
+  :is(#status-of-memo, #copyright) {
+    & p {
+      margin: -2px 0;
+      max-height: 0;
+      transition: max-height 2s ease, margin 0.5s ease 0.5s;
+      overflow: hidden;
+    }
+    &:hover p,
+    & h2:target ~ p {
+      margin: 0.5em 0;
+      max-height: 500px;
+      overflow: auto;
+    }
+  }
+  pre, svg {
+    display: inline-block;
+    /* In the horizontal direction, sometimes people make over-sized figures.
+       Scrollbars for those is therefore necessary: auto adds them as necessary..
+       In the vertical direction, the line-height can combine with the font
+       asender/descender height to produce scrollbars: hidden avoids that. */
+    overflow: auto hidden;
+  }
+  pre {
+    max-width: 100%;
+    width: calc(100% - 22px - 1em);
+  }
+  svg {
+    max-width: calc(100% - 22px - 1em);
+  }
+  figure pre {
+    display: block;
+    width: calc(100% - 25px);
+  }
+  :is(pre, svg) + .pilcrow {
+    display: inline-block;
+    vertical-align: text-bottom;
+    padding-bottom: 8px;
+  }
+}
+
+/* aside, blockquote */
+aside, blockquote {
+  margin-left: 0;
+  padding: 0 2em;
+  font-style: italic;
+}
+blockquote {
+  margin: 1em 0;
+  border-left: 2px var(--pilcrow-strong) solid;
+}
+cite {
+  display: block;
+  text-align: right;
+  font-style: italic;
+}
+
+/* tables */
+table {
+  width: auto;
+  max-width: 100%;
+  margin: 0 0 1em;
+  border-collapse: collapse;
+  &.right { margin-left: auto; }
+  &.center { margin-left: auto; margin-right: auto; }
+  &.left { margin-right: auto; }
+  & .text-left { text-align: left; }
+  & .text-center { text-align: center; }
+  & .text-right { text-align: right; }
+  & caption {
+    margin: 0;
+    padding: 3px 0 3px 1em;
+  }
+  & p { margin: 0; }
+}
+
+thead, tbody {
+  border: 1px solid var(--line-color);
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: 5px 10px;
+}
+th {
+  background-color: var(--line-color);
+}
+:is(tr:nth-child(2n), thead+tbody > tr:nth-child(2n+1)) > td {
+  background-color: var(--background-color);
+}
+:is(tr:nth-child(2n+1), thead+tbody > tr:nth-child(2n)) > td {
+  background-color: var(--highlight-color);
+}
+
+/* pilcrow */
+a.pilcrow {
+  margin-left: 3px;
+  opacity: 0.2;
+  user-select: none;
+  &[href] {
+    color: var(--pilcrow-weak);
+    &:hover { text-decoration: none; }
+  }
+  @media not print {
+    :hover > &, &:focus {
+      opacity: 1;
+    }
+    &[href]:hover {
+      color: var(--pilcrow-strong);
+      background-color: transparent;
+    }
+  }
+  @media print {
+    display: none;
+  }
+}
+
+/* misc */
+hr {
+  border: 0;
+  border-top: 1px solid var(--line-color);
+}
+.bcp14 {
+  font-variant: small-caps;
+  font-weight: 600;
+  font-size: var(--small-font-size);
+}
+.role {
+  font-variant: all-small-caps;
+}
+sub, sup {
+  line-height: 1;
+  font-size: 80%;
+}
+
+/* info block */
+#identifiers {
+  margin: 0;
+  font-size: var(--small-font-size);
+  line-height: 18px;
+  --identifier-width: 15ch;
+  & dt {
+    width: var(--identifier-width);
+    min-width: var(--identifier-width);
+    clear: left;
+    float: left;
+    text-align: right;
+    margin-right: 1ch;
+  }
+  & dd {
+    margin: 0;
+    margin-left: calc(1em + var(--identifier-width)) !important;
+    min-width: 5em;
+  }
+  & .authors {
+    & .author {
+      display: inline-block;
+      margin-right: 1.5em;
+    }
+    & .org {
+      font-style: italic;
+    }
+  }
+}
+
+/* The prepared/rendered info at the very bottom of the page */
+.docInfo {
+  color: #999;
+  font-size: 0.9em;
+  font-style: italic;
+  margin-top: 2em;
+  & .prepared {
+    float: right;
+  }
+}
+
+/* table of contents */
+#toc {
+  padding: 0.75em 0 2em 0;
+  margin-bottom: 1em;
+
+  & nav {
+    & ul {
+      margin: 0 0.5em 0 0;
+      padding: 0;
+      list-style: none;
+    }
+    & li {
+      line-height: 1.3em;
+      margin: 2px 0;
+      padding-left: 1.2em;
+      text-indent: -1.2em;
+    }
+  }
+  & a.xref {
+    white-space: normal;
+  }
+}
+
+.references {
+  & > dt {
+    text-align: right;
+    font-weight: bold;
+    min-width: 10ch;
+    margin-right: 1.5ch;
+    &:target::before {
+      content: "⇒";
+      margin: 0 10px 0 -25px;
+    }
+  }
+  & > dd {
+    margin-left: 12ch !important;
+    overflow: visible;
+    & .refInstance {
+      margin-bottom: 0.8em;
+    }
+    & .ascii {
+      margin-bottom: 0.25em;
+    }
+  }
+}
+
+#rfc\.index\.index + ul {
+  margin-left: 0;
+}
+
+/* authors */
+address.vcard {
+  font-style: normal;
+  max-width: 20em;
+  margin: 1em auto 1em 0;
+
+  & .nameRole {
+    font-weight: 700;
+    margin-left: 0;
+  }
+  & .label {
+    margin: 0.5em 0;
+  }
+  & .type {
+    display: none;
+  }
+  & .alternative-contact {
+    margin: 0.5em 0 0.25em 0;
+  }
+  & .non-ascii {
+    margin: 0 0 0 2em;
+  }
+  & div.left {
+    text-align: left;
+  }
+  & div.right {
+    text-align: right;
+  }
+}
+
+hr.addr {
+  border-top: 1px dashed;
+  margin: 0;
+  color: #ddd;
+  max-width: calc(100% - 16px);
+}
+@media (min-width: 500px) {
+  #authors-addresses {
+    & > section {
+      column-count: 2;
+      column-gap: 20px;
+    }
+    & > section > h2 {
+      column-span: all;
+    }
+    /* hack for break-inside: avoid-column */
+    & address {
+      display: inline-block;
+      break-inside: avoid-column;
+    }
+  }
+}
+
+/* Comments */
+.rfcEditorRemove {
+  & p:first-of-type {
+    font-style: italic;
+  }
+}
+.cref {
+  background-color: rgba(249, 232, 105, 0.3);
+  padding: 2px 4px;
+}
+.crefSource {
+  font-style: italic;
+}
+
+@media screen {
+  #toc {
+    & nav {
+      font-family: var(--font-title);
+      font-weight: 360;
+      & > ul { margin-bottom: 2em; }
+      & ul {
+        margin: 0 0 0 4px;
+        & :is(p, li) {
+          margin: 2px 0;
+        }
+      }
+    }
+    & a.toplink {
+      float: right;
+    }
+  }
+}
+@media not screen {
+  #toc a.toplink {
+    display: none;
+  }
+}
+
+
+/* TOC layout for smaller screens */
+@media screen and (max-width: 929px) {
+  #toc {
+    position: fixed;
+    z-index: 2;
+    top: 0;
+    right: 0;
+    padding: 1px 0 0 0;
+    margin: 0;
+    border-bottom: 1px solid #ccc;
+    opacity: 0.6;
+    & h2 {
+      margin: 0;
+      padding: 2px 0 2px 6px;
+      padding-right: 1em;
+      font-size: 18px;
+      line-height: 24px;
+      min-width: 190px;
+      text-align: right;
+      background-color: #444;
+      color: white;
+      cursor: pointer;
+      &::before { /* css hamburger */
+        float: right;
+        position: relative;
+        width: 1em;
+        height: 1px;
+        left: -164px;
+        margin: 8px 0 0 0;
+        background: white none repeat scroll 0 0;
+        box-shadow: 0 4px 0 0 white, 0 8px 0 0 white;
+        content: "";
+      }
+    }
+    & nav {
+      display: none;
+      background-color: var(--background-color);
+      padding: 0.5em 1em 1em;
+      overflow: auto;
+      overscroll-behavior: contain;
+      height: calc(100vh - 48px);
+      border-left: 1px solid #ddd;
+    }
+    &.active {
+      opacity: 1;
+      & nav { display: block; }
+    }
+    /* Make the collapsed ToC header render white on gray also when it's a link */
+    & h2 a,
+    & h2 a:is(:link, :focus, :hover),
+    & a.toplink,
+    & a.toplink:hover {
+      color: white;
+      background-color: #444;
+      text-decoration: none;
+    }
+    & a.toplink {
+      margin: 2px 0.5em 0;
+    }
+  }
+}
+
+/* TOC layout for wide screens */
+@media screen and (min-width: 930px) {
+  body {
+    padding-right: 360px;
+    padding-right: calc(min(180px + 20%, 500px));
+  }
+  #toc {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    right: calc(50vw - 480px);
+    width: 312px;
+    margin: 0;
+    padding: 0;
+    z-index: 1;
+    & h2 {
+      margin: 0;
+      padding: 0.25em 1em 1em 0;
+    }
+    & nav {
+      display: block;
+      height: calc(90vh - 84px);
+      bottom: 0;
+      padding: 0.5em 0 2em;
+      overflow: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+    }
+    & a.toplink {
+      margin: 8px 0.5em 0;
+    }
+  }
+  img { /* future proofing */
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+/* pagination */
+@media print {
+  body {
+    width: 100%;
+  }
+  p {
+    orphans: 3;
+    widows: 3;
+  }
+  #n-copyright-notice {
+    border-bottom: none;
+  }
+  #toc {
+    page-break-before: always;
+    border-top: none;
+    padding-top: 0;
+  }
+  #n-introduction {
+    page-break-before: always;
+  }
+  figure, pre, .vcard {
+    page-break-inside: avoid;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+  }
+  :is(h2, h3, h4, h5, h6)+*, dd {
+    page-break-before: avoid;
+  }
+  pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: 10pt;
+  }
+  table {
+    border: 1px solid #ddd;
+  }
+  td {
+    border-top: 1px solid #ddd;
+  }
+}
+
+@page :first {
+  padding-top: 0;
+  @top-left {
+    content: normal;
+    border: none;
+  }
+  @top-center {
+    content: normal;
+    border: none;
+  }
+  @top-right {
+    content: normal;
+    border: none;
+  }
+}
+
+@page {
+  size: A4;
+  margin-bottom: 45mm;
+  padding-top: 20px;
+}
+
+/* Dark mode. */
+@media (prefers-color-scheme: dark) {
+:root {
+  --background-color: #121212;
+  --text-color: #f0f0f0;
+  --title-color: #fff;
+  --link-color: #4da4f0;
+  --highlight-color: #282828;
+  --line-color: #444;
+  --pilcrow-weak: #444;
+  --pilcrow-strong: #666;
+  scrollbar-color: #777 #333;
+}
+}
+
+/* SVG Trick: a prefix match works because only black and white are allowed */
+svg {
+  & :is([stroke="black"], [stroke^="#000"]) {
+    stroke: var(--text-color);
+  }
+  & :is([stroke="white"], [stroke^="#fff"]) {
+    stroke: var(--background-color);
+  }
+  & :is([fill="black"], [fill^="#000"], :not([fill])) {
+    fill: var(--text-color);
+  }
+  & :is([fill="white"], [fill^="#fff"]) {
+    fill: var(--background-color);
+  }
+}
+</style>
+
+</head>
+<body class="xml2rfc">
+<table class="ears">
+<thead><tr>
+<td class="left">Internet-Draft</td>
+<td class="center">EAP-PQPAKE</td>
+<td class="right">July 2026</td>
+</tr></thead>
+<tfoot><tr>
+<td class="left">Tschofenig</td>
+<td class="center">Expires 7 January 2027</td>
+<td class="right">[Page]</td>
+</tr></tfoot>
+</table>
+<div id="external-metadata" class="document-information"></div>
+<div id="internal-metadata" class="document-information">
+<dl id="identifiers">
+<dt class="label-workgroup">Workgroup:</dt>
+<dd class="workgroup">EMU Working Group</dd>
+<dt class="label-internet-draft">Internet-Draft:</dt>
+<dd class="internet-draft">draft-tschofenig-emu-pqpake-latest</dd>
+<dt class="label-published">Published:</dt>
+<dd class="published">
+<time datetime="2026-07-06" class="published">6 July 2026</time>
+    </dd>
+<dt class="label-intended-status">Intended Status:</dt>
+<dd class="intended-status">Experimental</dd>
+<dt class="label-expires">Expires:</dt>
+<dd class="expires"><time datetime="2027-01-07">7 January 2027</time></dd>
+<dt class="label-authors">Author:</dt>
+<dd class="authors">
+<div class="author">
+      <div class="author-name">H. Tschofenig</div>
+<div class="org">UniBw M.</div>
+</div>
+</dd>
+</dl>
+</div>
+<h1 id="title">The EAP-PQPAKE Authentication Method</h1>
+<section id="section-abstract">
+      <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
+<p id="section-abstract-1">This document defines EAP-PQPAKE, an Extensible Authentication Protocol
+(EAP) method that uses a hybrid post-quantum password-authenticated key
+exchange.  The method is based on the CPaceOQUAKE+ asymmetric PAKE and
+provides mutual authentication and EAP key export from a password without
+requiring public-key certificates during normal authentication.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+</section>
+<section class="note rfcEditorRemove" id="section-note.1">
+      <h2 id="name-about-this-document">
+<a href="#name-about-this-document" class="section-name selfRef">About This Document</a>
+      </h2>
+<p id="section-note.1-1">This note is to be removed before publishing as an RFC.<a href="#section-note.1-1" class="pilcrow">¶</a></p>
+<p id="section-note.1-2">
+        The latest revision of this draft can be found at <span><a href="https://TODO.example/draft-todo-emu-eap-pqpake.html">https://TODO.example/draft-todo-emu-eap-pqpake.html</a></span>.
+        Status information for this document may be found at <span><a href="https://datatracker.ietf.org/doc/draft-tschofenig-emu-pqpake/">https://datatracker.ietf.org/doc/draft-tschofenig-emu-pqpake/</a></span>.<a href="#section-note.1-2" class="pilcrow">¶</a></p>
+<p id="section-note.1-3">
+        Discussion of this document takes place on the
+        EMU Working Group mailing list (<span><a href="mailto:emu@ietf.org">mailto:emu@ietf.org</a></span>),
+        which is archived at <span><a href="https://mailarchive.ietf.org/arch/browse/emu/">https://mailarchive.ietf.org/arch/browse/emu/</a></span>.
+        Subscribe at <span><a href="https://www.ietf.org/mailman/listinfo/emu/">https://www.ietf.org/mailman/listinfo/emu/</a></span>.<a href="#section-note.1-3" class="pilcrow">¶</a></p>
+<p id="section-note.1-4">Source for this draft and an issue tracker can be found at
+        <span><a href="https://github.com/TODO/TODO">https://github.com/TODO/TODO</a></span>.<a href="#section-note.1-4" class="pilcrow">¶</a></p>
+</section>
+<div id="status-of-memo">
+<section id="section-boilerplate.1">
+        <h2 id="name-status-of-this-memo">
+<a href="#name-status-of-this-memo" class="section-name selfRef">Status of This Memo</a>
+        </h2>
+<p id="section-boilerplate.1-1">
+        This Internet-Draft is submitted in full conformance with the
+        provisions of BCP 78 and BCP 79.<a href="#section-boilerplate.1-1" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-2">
+        Internet-Drafts are working documents of the Internet Engineering Task
+        Force (IETF). Note that other groups may also distribute working
+        documents as Internet-Drafts. The list of current Internet-Drafts is
+        at <span><a href="https://datatracker.ietf.org/drafts/current/">https://datatracker.ietf.org/drafts/current/</a></span>.<a href="#section-boilerplate.1-2" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-3">
+        Internet-Drafts are draft documents valid for a maximum of six months
+        and may be updated, replaced, or obsoleted by other documents at any
+        time. It is inappropriate to use Internet-Drafts as reference
+        material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-4">
+        This Internet-Draft will expire on 7 January 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="copyright">
+<section id="section-boilerplate.2">
+        <h2 id="name-copyright-notice">
+<a href="#name-copyright-notice" class="section-name selfRef">Copyright Notice</a>
+        </h2>
+<p id="section-boilerplate.2-1">
+            Copyright (c) 2026 IETF Trust and the persons identified as the
+            document authors. All rights reserved.<a href="#section-boilerplate.2-1" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.2-2">
+            This document is subject to BCP 78 and the IETF Trust's Legal
+            Provisions Relating to IETF Documents
+            (<span><a href="https://trustee.ietf.org/license-info">https://trustee.ietf.org/license-info</a></span>) in effect on the date of
+            publication of this document. Please review these documents
+            carefully, as they describe your rights and restrictions with
+            respect to this document. Code Components extracted from this
+            document must include Revised BSD License text as described in
+            Section 4.e of the Trust Legal Provisions and are provided without
+            warranty as described in the Revised BSD License.<a href="#section-boilerplate.2-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="toc">
+<section id="section-toc.1">
+        <a href="#" onclick="scroll(0,0)" class="toplink">▲</a><h2 id="name-table-of-contents">
+<a href="#name-table-of-contents" class="section-name selfRef">Table of Contents</a>
+        </h2>
+<nav class="toc"><ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1">
+            <p id="section-toc.1-1.1.1" class="keepWithNext"><a href="#section-1" class="auto internal xref">1</a>.  <a href="#name-introduction" class="internal xref">Introduction</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2">
+            <p id="section-toc.1-1.2.1" class="keepWithNext"><a href="#section-2" class="auto internal xref">2</a>.  <a href="#name-conventions-and-definitions" class="internal xref">Conventions and Definitions</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3">
+            <p id="section-toc.1-1.3.1" class="keepWithNext"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-protocol-overview" class="internal xref">Protocol Overview</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4">
+            <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-cpaceoquake-use" class="internal xref">CPaceOQUAKE+ Use</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5">
+            <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-configurations" class="internal xref">Configurations</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6">
+            <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-packet-format" class="internal xref">Packet Format</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.1">
+                <p id="section-toc.1-1.6.2.1.1"><a href="#section-6.1" class="auto internal xref">6.1</a>.  <a href="#name-identity-types" class="internal xref">Identity Types</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.2">
+                <p id="section-toc.1-1.6.2.2.1"><a href="#section-6.2" class="auto internal xref">6.2</a>.  <a href="#name-start-payloads" class="internal xref">Start Payloads</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.3">
+                <p id="section-toc.1-1.6.2.3.1"><a href="#section-6.3" class="auto internal xref">6.3</a>.  <a href="#name-pake1-payloads" class="internal xref">PAKE1 Payloads</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.4">
+                <p id="section-toc.1-1.6.2.4.1"><a href="#section-6.4" class="auto internal xref">6.4</a>.  <a href="#name-pake2-payloads" class="internal xref">PAKE2 Payloads</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.5">
+                <p id="section-toc.1-1.6.2.5.1"><a href="#section-6.5" class="auto internal xref">6.5</a>.  <a href="#name-confirm-payloads" class="internal xref">Confirm Payloads</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.6">
+                <p id="section-toc.1-1.6.2.6.1"><a href="#section-6.6" class="auto internal xref">6.6</a>.  <a href="#name-failure-payload" class="internal xref">Failure Payload</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7">
+            <p id="section-toc.1-1.7.1"><a href="#section-7" class="auto internal xref">7</a>.  <a href="#name-fragmentation" class="internal xref">Fragmentation</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8">
+            <p id="section-toc.1-1.8.1"><a href="#section-8" class="auto internal xref">8</a>.  <a href="#name-key-derivation" class="internal xref">Key Derivation</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9">
+            <p id="section-toc.1-1.9.1"><a href="#section-9" class="auto internal xref">9</a>.  <a href="#name-security-considerations" class="internal xref">Security Considerations</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10">
+            <p id="section-toc.1-1.10.1"><a href="#section-10" class="auto internal xref">10</a>. <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11">
+            <p id="section-toc.1-1.11.1"><a href="#section-11" class="auto internal xref">11</a>. <a href="#name-references" class="internal xref">References</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11.2.1">
+                <p id="section-toc.1-1.11.2.1.1"><a href="#section-11.1" class="auto internal xref">11.1</a>.  <a href="#name-normative-references" class="internal xref">Normative References</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11.2.2">
+                <p id="section-toc.1-1.11.2.2.1"><a href="#section-11.2" class="auto internal xref">11.2</a>.  <a href="#name-informative-references" class="internal xref">Informative References</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12">
+            <p id="section-toc.1-1.12.1"><a href="#appendix-A" class="auto internal xref"></a><a href="#name-acknowledgments" class="internal xref">Acknowledgments</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.13">
+            <p id="section-toc.1-1.13.1"><a href="#appendix-B" class="auto internal xref"></a><a href="#name-authors-address" class="internal xref">Author's Address</a></p>
+</li>
+        </ul>
+</nav>
+</section>
+</div>
+<div id="introduction">
+<section id="section-1">
+      <h2 id="name-introduction">
+<a href="#section-1" class="section-number selfRef">1. </a><a href="#name-introduction" class="section-name selfRef">Introduction</a>
+      </h2>
+<p id="section-1-1">The Extensible Authentication Protocol (EAP) <span>[<a href="#RFC3748" class="cite xref">RFC3748</a>]</span> supports
+multiple authentication methods between an EAP peer and an EAP server.
+Several EAP methods use passwords directly, including EAP-pwd <span>[<a href="#RFC5931" class="cite xref">RFC5931</a>]</span>
+and EAP-EKE <span>[<a href="#RFC6124" class="cite xref">RFC6124</a>]</span>.  These methods address the operational need for
+authentication from a human-memorable password while limiting the value
+of passive observation and offline dictionary attacks.<a href="#section-1-1" class="pilcrow">¶</a></p>
+<p id="section-1-2">Existing password-based EAP methods are built from classical public-key
+assumptions.  A quantum-capable attacker that records authentication
+exchanges today may later be able to recover keying material when those
+classical assumptions fail.  This is undesirable for deployments where
+the confidentiality or integrity of subsequent traffic remains valuable
+after the authentication exchange has completed.<a href="#section-1-2" class="pilcrow">¶</a></p>
+<p id="section-1-3">This document specifies EAP-PQPAKE, an EAP method that encapsulates
+CPaceOQUAKE+ <span>[<a href="#I-D.vos-cfrg-pqpake" class="cite xref">I-D.vos-cfrg-pqpake</a>]</span>.  CPaceOQUAKE+ is a hybrid
+asymmetric PAKE that combines a classical PAKE component with a
+post-quantum KEM-based component.  EAP-PQPAKE defines the EAP message
+flow, packet formats, method transcript, exported MSK and EMSK
+derivation, fragmentation behavior, and IANA registries needed to use
+CPaceOQUAKE+ as an EAP method.<a href="#section-1-3" class="pilcrow">¶</a></p>
+<p id="section-1-4">CPaceOQUAKE+ is derived from CPaceOQUAKE, a hybrid symmetric PAKE that
+sequentially composes CPace and OQUAKE.  CPace contributes a classical
+PAKE whose transcript is unconditionally password hiding, while OQUAKE
+contributes a post-quantum KEM-based PAKE component.  The sequential
+composition is part of the CPaceOQUAKE+ design and is not a generic
+combiner for arbitrary PAKEs.<a href="#section-1-4" class="pilcrow">¶</a></p>
+<p id="section-1-5">EAP-PQPAKE assumes that the server has been provisioned with the
+CPaceOQUAKE+ password verifiers for the peer.  The registration
+procedure used to create those verifiers is specified by
+CPaceOQUAKE+ and is outside the EAP authentication exchange defined in
+this document.  Registration <span class="bcp14">MUST</span> be performed over a channel that
+authenticates the server and protects the verifier material from
+modification.<a href="#section-1-5" class="pilcrow">¶</a></p>
+<p id="section-1-6">Note: This document version is experimental and relies on a
+work in progress PAKE algorithm.<a href="#section-1-6" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="conventions-and-definitions">
+<section id="section-2">
+      <h2 id="name-conventions-and-definitions">
+<a href="#section-2" class="section-number selfRef">2. </a><a href="#name-conventions-and-definitions" class="section-name selfRef">Conventions and Definitions</a>
+      </h2>
+<p id="section-2-1">The key words "<span class="bcp14">MUST</span>", "<span class="bcp14">MUST NOT</span>", "<span class="bcp14">REQUIRED</span>", "<span class="bcp14">SHALL</span>", "<span class="bcp14">SHALL NOT</span>", "<span class="bcp14">SHOULD</span>", "<span class="bcp14">SHOULD NOT</span>", "<span class="bcp14">RECOMMENDED</span>", "<span class="bcp14">NOT RECOMMENDED</span>",
+"<span class="bcp14">MAY</span>", and "<span class="bcp14">OPTIONAL</span>" in this document are to be interpreted as
+described in BCP 14 <span>[<a href="#RFC2119" class="cite xref">RFC2119</a>]</span> <span>[<a href="#RFC8174" class="cite xref">RFC8174</a>]</span> when, and only when, they
+appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶</a></p>
+<p id="section-2-2">The following terms are used throughout this document:<a href="#section-2-2" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-2-3">
+        <dt id="section-2-3.1">EAP peer:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.2">
+          <p id="section-2-3.2.1">The endpoint being authenticated by the EAP server.<a href="#section-2-3.2.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.3">EAP server:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.4">
+          <p id="section-2-3.4.1">The endpoint that selects the EAP method, stores the peer's
+CPaceOQUAKE+ verifier state, and authenticates the peer.<a href="#section-2-3.4.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.5">PRS:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.6">
+          <p id="section-2-3.6.1">The password-related string input to CPaceOQUAKE+.  This is commonly
+the password after local password processing.<a href="#section-2-3.6.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.7">U:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.8">
+          <p id="section-2-3.8.1">The peer identity input to CPaceOQUAKE+.<a href="#section-2-3.8.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.9">S:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.10">
+          <p id="section-2-3.10.1">The server identity input to CPaceOQUAKE+.<a href="#section-2-3.10.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.11">Config:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.12">
+          <p id="section-2-3.12.1">A registered set of CPaceOQUAKE+ algorithms and parameters.<a href="#section-2-3.12.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.13">Method key:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.14">
+          <p id="section-2-3.14.1">The 32-octet key output by the CPaceOQUAKE+ password confirmation
+stage.  EAP-PQPAKE expands this value to the MSK and EMSK.<a href="#section-2-3.14.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.15">uint8, uint16, uint32:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.16">
+          <p id="section-2-3.16.1">Unsigned integers encoded in network byte order.<a href="#section-2-3.16.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.17">opaque16:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.18">
+          <p id="section-2-3.18.1">A variable-length octet string encoded as a uint16 length followed by
+that many octets.<a href="#section-2-3.18.1" class="pilcrow">¶</a></p>
+</dd>
+      <dd class="break"></dd>
+</dl>
+</section>
+</div>
+<div id="protocol-overview">
+<section id="section-3">
+      <h2 id="name-protocol-overview">
+<a href="#section-3" class="section-number selfRef">3. </a><a href="#name-protocol-overview" class="section-name selfRef">Protocol Overview</a>
+      </h2>
+<p id="section-3-1">EAP is a lock-step request/response protocol in which the EAP server
+sends each Request and the EAP peer sends the corresponding Response.
+CPaceOQUAKE+ is initiated by the client.  EAP-PQPAKE therefore uses an
+empty server request to solicit the first CPaceOQUAKE+ message from the
+peer after identity and configuration negotiation have completed.<a href="#section-3-1" class="pilcrow">¶</a></p>
+<p id="section-3-2">A successful EAP-PQPAKE exchange has the following shape:<a href="#section-3-2" class="pilcrow">¶</a></p>
+<div class="alignLeft art-ascii-art art-text artwork" id="section-3-3">
+<pre>
+ EAP peer                                      EAP server
+ --------                                      ----------
+
+                          EAP-PQPAKE-Start/Request
+                  &lt;---------------------------------
+ EAP-PQPAKE-Start/Response
+ ---------------------------------&gt;
+
+                          EAP-PQPAKE-PAKE1/Request
+                  &lt;---------------------------------
+ EAP-PQPAKE-PAKE1/Response  (CPaceOQUAKE+ msg1)
+ ---------------------------------&gt;
+
+                          EAP-PQPAKE-PAKE2/Request
+                          (CPaceOQUAKE+ msg2)
+                  &lt;---------------------------------
+ EAP-PQPAKE-PAKE2/Response  (CPaceOQUAKE+ msg3)
+ ---------------------------------&gt;
+
+                          EAP-PQPAKE-Confirm/Request (PC challenge)
+                  &lt;---------------------------------
+ EAP-PQPAKE-Confirm/Response  (PC response)
+ ---------------------------------&gt;
+
+                          EAP-Success
+                  &lt;---------------------------------
+</pre><a href="#section-3-3" class="pilcrow">¶</a>
+</div>
+<p id="section-3-4">The Start exchange negotiates one CPaceOQUAKE+ configuration and
+identifies the peer and server.  After receiving the peer identity, the
+server locates the stored verifier, public key, and salt for that peer
+and selected configuration.  The PAKE1 and PAKE2 exchanges carry the
+three CPaceOQUAKE messages.  The Confirm exchange carries the password
+confirmation challenge and response.<a href="#section-3-4" class="pilcrow">¶</a></p>
+<p id="section-3-5">On success, both endpoints derive the EAP MSK and EMSK from the
+CPaceOQUAKE+ method key.  On failure, either endpoint can send an
+EAP-PQPAKE-Failure message.  The server terminates failed exchanges with
+EAP-Failure.<a href="#section-3-5" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="cpaceoquake-use">
+<section id="section-4">
+      <h2 id="name-cpaceoquake-use">
+<a href="#section-4" class="section-number selfRef">4. </a><a href="#name-cpaceoquake-use" class="section-name selfRef">CPaceOQUAKE+ Use</a>
+      </h2>
+<p id="section-4-1">EAP-PQPAKE uses CPaceOQUAKE+ as specified in <span>[<a href="#I-D.vos-cfrg-pqpake" class="cite xref">I-D.vos-cfrg-pqpake</a>]</span>,
+with the following mapping.<a href="#section-4-1" class="pilcrow">¶</a></p>
+<p id="section-4-2">The CPaceOQUAKE+ messages carried by this method are opaque to
+EAP-PQPAKE.  Implementations that implement CPaceOQUAKE+ directly, rather
+than using a CPaceOQUAKE+ library interface, <span class="bcp14">MUST</span> follow the selected
+CPaceOQUAKE+ configuration exactly.  In particular, OQUAKE ciphertext
+lengths and parsing are determined by the BUA-sKEM parameters of that
+configuration and <span class="bcp14">MUST NOT</span> be inferred from public-key lengths.  Kemeleon
+uniform encoding is applied only where CPaceOQUAKE+ specifies it, such as
+to the ML-BUA-sKEM public-key material, and <span class="bcp14">MUST NOT</span> be applied to
+ciphertexts unless the selected CPaceOQUAKE+ configuration explicitly
+requires it.<a href="#section-4-2" class="pilcrow">¶</a></p>
+<p id="section-4-3">The peer computes the CPaceOQUAKE+ verifier material from PRS, salt, U,
+and S using <code>GenVerifierMaterial</code>.  The server stores the salt, verifier,
+and KEM public key for the peer.  The server <span class="bcp14">MUST NOT</span> store the seed
+that CPaceOQUAKE+ derives from the password.<a href="#section-4-3" class="pilcrow">¶</a></p>
+<p id="section-4-4">The CPaceOQUAKE+ session identifier <code>sid</code> is:<a href="#section-4-4" class="pilcrow">¶</a></p>
+<div class="lang-pseudocode sourcecode" id="section-4-5">
+<pre>
+sid = H("EAP-PQPAKE sid" ||
+        start_request_payload ||
+        start_response_payload ||
+        pake1_request_payload)
+</pre><a href="#section-4-5" class="pilcrow">¶</a>
+</div>
+<p id="section-4-6">where <code>H</code> is the hash function selected by the EAP-PQPAKE configuration.
+The peer identity U is the Identity field from the Start/Response.  The
+server identity S is the Identity field from the Start/Request.  Both
+identities are the exact encoded octet strings sent on the wire, not a
+display-normalized form.<a href="#section-4-6" class="pilcrow">¶</a></p>
+<p id="section-4-7">The CPaceOQUAKE+ password-confirmation transcript <code>tx</code> is:<a href="#section-4-7" class="pilcrow">¶</a></p>
+<div class="lang-pseudocode sourcecode" id="section-4-8">
+<pre>
+tx = H("EAP-PQPAKE transcript" ||
+       start_request_payload ||
+       start_response_payload ||
+       pake1_request_payload ||
+       pake1_response_payload ||
+       pake2_request_payload ||
+       pake2_response_payload)
+</pre><a href="#section-4-8" class="pilcrow">¶</a>
+</div>
+<p id="section-4-9">The hash input includes the complete EAP-PQPAKE payloads, excluding EAP
+Code, Identifier, Length, Type, fragmentation flags, Total-Length, and
+fragmentation acknowledgements.  This binds the selected configuration,
+identities, salt, server nonce, and all CPaceOQUAKE messages into the
+password confirmation stage.<a href="#section-4-9" class="pilcrow">¶</a></p>
+<p id="section-4-10">An implementation <span class="bcp14">MUST</span> abort the exchange if any CPaceOQUAKE+ operation
+raises an authentication error, if a received cryptographic message is
+not valid for the selected configuration, or if the selected
+configuration does not match one offered by the server.<a href="#section-4-10" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="configurations">
+<section id="section-5">
+      <h2 id="name-configurations">
+<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-configurations" class="section-name selfRef">Configurations</a>
+      </h2>
+<p id="section-5-1">An EAP-PQPAKE configuration identifies all cryptographic parameters
+needed by CPaceOQUAKE+ and the EAP exporter.  This document defines one
+mandatory-to-implement configuration:<a href="#section-5-1" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-5-2">
+        <dt id="section-5-2.1">PQPAKE-XWING-MLBUASKEM1024-CPACE-RISTRETTO255-HKDFSHA256-ARGON2ID:</dt>
+        <dd style="margin-left: 1.5em" id="section-5-2.2">
+          <p id="section-5-2.2.1">This configuration uses the recommended CPaceOQUAKE+ configuration
+from <span>[<a href="#I-D.vos-cfrg-pqpake" class="cite xref">I-D.vos-cfrg-pqpake</a>]</span>: CPACE-RISTR255-SHA512, X-Wing for the
+password-confirmation KEM, HKDF-SHA-256 for the
+password-confirmation KDF, Argon2id <span>[<a href="#RFC9106" class="cite xref">RFC9106</a>]</span> with the parameters
+specified by CPaceOQUAKE+, ML-BUA-sKEM1024 for OQUAKE, HKDF-SHA-256
+for the PAKE KDF, SHA-256 as the general-purpose hash, and the
+CPaceOQUAKE+ recommended domain separation tag.  The ML-BUA-sKEM1024
+OQUAKE parameters, including Kemeleon security parameter and public-key
+and ciphertext lengths, are those specified by CPaceOQUAKE+ for this
+configuration.<a href="#section-5-2.2.1" class="pilcrow">¶</a></p>
+</dd>
+      <dd class="break"></dd>
+</dl>
+<p id="section-5-3">Implementations conforming to this document <span class="bcp14">MUST</span> implement this
+configuration.  Other configurations <span class="bcp14">MAY</span> be registered as described in
+<a href="#iana" class="auto internal xref">Section 10</a>.  New configurations <span class="bcp14">MUST</span> specify the complete CPaceOQUAKE+
+parameter set and <span class="bcp14">MUST</span> use a hybrid KEM for the password-confirmation
+KEM, as required by CPaceOQUAKE+.<a href="#section-5-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="packet-format">
+<section id="section-6">
+      <h2 id="name-packet-format">
+<a href="#section-6" class="section-number selfRef">6. </a><a href="#name-packet-format" class="section-name selfRef">Packet Format</a>
+      </h2>
+<p id="section-6-1">EAP-PQPAKE packets consist of the standard EAP header followed by an
+EAP-PQPAKE method header and the exchange-specific payload.  Multi-octet
+integers are encoded in network byte order.<a href="#section-6-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-ascii-art art-text artwork" id="section-6-2">
+<pre>
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|     Code      |  Identifier   |             Length            |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|     Type      |     Flags     |  PQPAKE-Exch  |   Data ...
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+</pre><a href="#section-6-2" class="pilcrow">¶</a>
+</div>
+<p id="section-6-3">Code, Identifier, Length, and Type are the EAP fields defined in
+<span>[<a href="#RFC3748" class="cite xref">RFC3748</a>]</span>.  The Type value for EAP-PQPAKE is TBD1.<a href="#section-6-3" class="pilcrow">¶</a></p>
+<p id="section-6-4">The Flags field is defined as follows:<a href="#section-6-4" class="pilcrow">¶</a></p>
+<div class="alignLeft art-ascii-art art-text artwork" id="section-6-5">
+<pre>
+ 0 1 2 3 4 5 6 7
++-+-+-+-+-+-+-+-+
+|L|M| Reserved  |
++-+-+-+-+-+-+-+-+
+</pre><a href="#section-6-5" class="pilcrow">¶</a>
+</div>
+<span class="break"></span><dl class="dlParallel" id="section-6-6">
+        <dt id="section-6-6.1">L:</dt>
+        <dd style="margin-left: 1.5em" id="section-6-6.2">
+          <p id="section-6-6.2.1">Length included.  When set, a uint16 Total-Length field appears at the
+start of Data.<a href="#section-6-6.2.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-6-6.3">M:</dt>
+        <dd style="margin-left: 1.5em" id="section-6-6.4">
+          <p id="section-6-6.4.1">More fragments.  When set, more fragments of the same EAP-PQPAKE
+message follow.<a href="#section-6-6.4.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-6-6.5">Reserved:</dt>
+        <dd style="margin-left: 1.5em" id="section-6-6.6">
+          <p id="section-6-6.6.1"><span class="bcp14">MUST</span> be sent as zero and <span class="bcp14">MUST</span> be ignored by the receiver.<a href="#section-6-6.6.1" class="pilcrow">¶</a></p>
+</dd>
+      <dd class="break"></dd>
+</dl>
+<p id="section-6-7">PQPAKE-Exch identifies the exchange payload:<a href="#section-6-7" class="pilcrow">¶</a></p>
+<table class="center" id="table-1">
+        <caption><a href="#table-1" class="selfRef">Table 1</a></caption>
+<thead>
+          <tr>
+            <th class="text-right" rowspan="1" colspan="1">Value</th>
+            <th class="text-left" rowspan="1" colspan="1">Exchange</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="text-right" rowspan="1" colspan="1">0x00</td>
+            <td class="text-left" rowspan="1" colspan="1">Reserved</td>
+          </tr>
+          <tr>
+            <td class="text-right" rowspan="1" colspan="1">0x01</td>
+            <td class="text-left" rowspan="1" colspan="1">Start</td>
+          </tr>
+          <tr>
+            <td class="text-right" rowspan="1" colspan="1">0x02</td>
+            <td class="text-left" rowspan="1" colspan="1">PAKE1</td>
+          </tr>
+          <tr>
+            <td class="text-right" rowspan="1" colspan="1">0x03</td>
+            <td class="text-left" rowspan="1" colspan="1">PAKE2</td>
+          </tr>
+          <tr>
+            <td class="text-right" rowspan="1" colspan="1">0x04</td>
+            <td class="text-left" rowspan="1" colspan="1">Confirm</td>
+          </tr>
+          <tr>
+            <td class="text-right" rowspan="1" colspan="1">0x05</td>
+            <td class="text-left" rowspan="1" colspan="1">Failure</td>
+          </tr>
+          <tr>
+            <td class="text-right" rowspan="1" colspan="1">0x06-0x7f</td>
+            <td class="text-left" rowspan="1" colspan="1">Unassigned</td>
+          </tr>
+          <tr>
+            <td class="text-right" rowspan="1" colspan="1">0x80-0xff</td>
+            <td class="text-left" rowspan="1" colspan="1">Private Use</td>
+          </tr>
+        </tbody>
+      </table>
+<p id="section-6-9">If the L bit is set, Data begins with:<a href="#section-6-9" class="pilcrow">¶</a></p>
+<div class="alignLeft art-ascii-art art-text artwork" id="section-6-10">
+<pre>
+ 0                   1
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|         Total-Length          |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+</pre><a href="#section-6-10" class="pilcrow">¶</a>
+</div>
+<p id="section-6-11">Total-Length is the length in octets of the unfragmented EAP-PQPAKE
+message, including the EAP header, EAP-PQPAKE method header, and
+payload.<a href="#section-6-11" class="pilcrow">¶</a></p>
+<div id="identity-types">
+<section id="section-6.1">
+        <h3 id="name-identity-types">
+<a href="#section-6.1" class="section-number selfRef">6.1. </a><a href="#name-identity-types" class="section-name selfRef">Identity Types</a>
+        </h3>
+<p id="section-6.1-1">Identity Type is a one-octet field.  This document defines the following
+values:<a href="#section-6.1-1" class="pilcrow">¶</a></p>
+<table class="center" id="table-2">
+          <caption><a href="#table-2" class="selfRef">Table 2</a></caption>
+<thead>
+            <tr>
+              <th class="text-right" rowspan="1" colspan="1">Value</th>
+              <th class="text-left" rowspan="1" colspan="1">Name</th>
+              <th class="text-left" rowspan="1" colspan="1">Meaning</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="text-right" rowspan="1" colspan="1">0x00</td>
+              <td class="text-left" rowspan="1" colspan="1">Reserved</td>
+              <td class="text-left" rowspan="1" colspan="1">Reserved</td>
+            </tr>
+            <tr>
+              <td class="text-right" rowspan="1" colspan="1">0x01</td>
+              <td class="text-left" rowspan="1" colspan="1">Opaque</td>
+              <td class="text-left" rowspan="1" colspan="1">Opaque octet string</td>
+            </tr>
+            <tr>
+              <td class="text-right" rowspan="1" colspan="1">0x02</td>
+              <td class="text-left" rowspan="1" colspan="1">NAI</td>
+              <td class="text-left" rowspan="1" colspan="1">Network Access Identifier</td>
+            </tr>
+            <tr>
+              <td class="text-right" rowspan="1" colspan="1">0x03</td>
+              <td class="text-left" rowspan="1" colspan="1">FQDN</td>
+              <td class="text-left" rowspan="1" colspan="1">Fully Qualified Domain Name</td>
+            </tr>
+            <tr>
+              <td class="text-right" rowspan="1" colspan="1">0x04-0x7f</td>
+              <td class="text-left" rowspan="1" colspan="1">Unassigned</td>
+              <td class="text-left" rowspan="1" colspan="1">Available for assignment</td>
+            </tr>
+            <tr>
+              <td class="text-right" rowspan="1" colspan="1">0x80-0xff</td>
+              <td class="text-left" rowspan="1" colspan="1">Private Use</td>
+              <td class="text-left" rowspan="1" colspan="1">Private Use</td>
+            </tr>
+          </tbody>
+        </table>
+<p id="section-6.1-3">Implementations <span class="bcp14">MUST</span> support receiving Opaque and NAI identities.
+Implementations that use FQDN identities <span class="bcp14">MUST</span> use the A-label form for
+internationalized domain names.<a href="#section-6.1-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="start-payloads">
+<section id="section-6.2">
+        <h3 id="name-start-payloads">
+<a href="#section-6.2" class="section-number selfRef">6.2. </a><a href="#name-start-payloads" class="section-name selfRef">Start Payloads</a>
+        </h3>
+<p id="section-6.2-1">The Start/Request payload is sent by the server:<a href="#section-6.2-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-ascii-art art-text artwork" id="section-6.2-2">
+<pre>
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+| Config-Count  |   Reserved    |        Config-ID[0]          |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|        Config-ID[1] ...                                      ~
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+| Server-IDType |              Server-ID                       ~
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+</pre><a href="#section-6.2-2" class="pilcrow">¶</a>
+</div>
+<p id="section-6.2-3">Config-Count is the number of 16-bit Config-ID values offered by the
+server.  It <span class="bcp14">MUST</span> be greater than zero.  Config-ID values are listed in
+preference order.  Reserved <span class="bcp14">MUST</span> be sent as zero and ignored by the
+receiver.  Server-ID is an opaque16 field preceded by Server-IDType.<a href="#section-6.2-3" class="pilcrow">¶</a></p>
+<p id="section-6.2-4">The Start/Response payload is sent by the peer:<a href="#section-6.2-4" class="pilcrow">¶</a></p>
+<div class="alignLeft art-ascii-art art-text artwork" id="section-6.2-5">
+<pre>
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|        Selected-Config        | Peer-IDType   | Peer-ID      ~
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+</pre><a href="#section-6.2-5" class="pilcrow">¶</a>
+</div>
+<p id="section-6.2-6">Selected-Config <span class="bcp14">MUST</span> be one of the Config-ID values in the
+Start/Request.  Peer-ID is an opaque16 field preceded by Peer-IDType.
+The server uses Selected-Config and Peer-ID to locate the peer's stored
+salt, verifier, and KEM public key.<a href="#section-6.2-6" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="pake1-payloads">
+<section id="section-6.3">
+        <h3 id="name-pake1-payloads">
+<a href="#section-6.3" class="section-number selfRef">6.3. </a><a href="#name-pake1-payloads" class="section-name selfRef">PAKE1 Payloads</a>
+        </h3>
+<p id="section-6.3-1">The PAKE1/Request payload is sent by the server:<a href="#section-6.3-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-ascii-art art-text artwork" id="section-6.3-2">
+<pre>
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                         Server-Nonce                         ~
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                             Salt                              ~
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+</pre><a href="#section-6.3-2" class="pilcrow">¶</a>
+</div>
+<p id="section-6.3-3">Server-Nonce is an opaque16 field containing at least 32 octets of
+fresh random data generated by the server.  Salt is the opaque16 salt
+stored for the selected peer and configuration.<a href="#section-6.3-3" class="pilcrow">¶</a></p>
+<p id="section-6.3-4">The PAKE1/Response payload is sent by the peer:<a href="#section-6.3-4" class="pilcrow">¶</a></p>
+<div class="alignLeft art-ascii-art art-text artwork" id="section-6.3-5">
+<pre>
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                       CPaceOQUAKE-msg1                       ~
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+</pre><a href="#section-6.3-5" class="pilcrow">¶</a>
+</div>
+<p id="section-6.3-6">CPaceOQUAKE-msg1 is an opaque16 field containing the first
+CPaceOQUAKE+ message.<a href="#section-6.3-6" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="pake2-payloads">
+<section id="section-6.4">
+        <h3 id="name-pake2-payloads">
+<a href="#section-6.4" class="section-number selfRef">6.4. </a><a href="#name-pake2-payloads" class="section-name selfRef">PAKE2 Payloads</a>
+        </h3>
+<p id="section-6.4-1">The PAKE2/Request payload is sent by the server:<a href="#section-6.4-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-ascii-art art-text artwork" id="section-6.4-2">
+<pre>
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                       CPaceOQUAKE-msg2                       ~
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+</pre><a href="#section-6.4-2" class="pilcrow">¶</a>
+</div>
+<p id="section-6.4-3">The PAKE2/Response payload is sent by the peer:<a href="#section-6.4-3" class="pilcrow">¶</a></p>
+<div class="alignLeft art-ascii-art art-text artwork" id="section-6.4-4">
+<pre>
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                       CPaceOQUAKE-msg3                       ~
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+</pre><a href="#section-6.4-4" class="pilcrow">¶</a>
+</div>
+<p id="section-6.4-5">Both fields are encoded as opaque16 values.<a href="#section-6.4-5" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="confirm-payloads">
+<section id="section-6.5">
+        <h3 id="name-confirm-payloads">
+<a href="#section-6.5" class="section-number selfRef">6.5. </a><a href="#name-confirm-payloads" class="section-name selfRef">Confirm Payloads</a>
+        </h3>
+<p id="section-6.5-1">The Confirm/Request payload is sent by the server:<a href="#section-6.5-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-ascii-art art-text artwork" id="section-6.5-2">
+<pre>
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                         PC-Challenge                         ~
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+</pre><a href="#section-6.5-2" class="pilcrow">¶</a>
+</div>
+<p id="section-6.5-3">The Confirm/Response payload is sent by the peer:<a href="#section-6.5-3" class="pilcrow">¶</a></p>
+<div class="alignLeft art-ascii-art art-text artwork" id="section-6.5-4">
+<pre>
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                          PC-Response                         ~
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+</pre><a href="#section-6.5-4" class="pilcrow">¶</a>
+</div>
+<p id="section-6.5-5">Both fields are encoded as opaque16 values.  PC-Challenge is the
+challenge output by CPaceOQUAKE+ <code>PC-Challenge</code>.  PC-Response is the
+response output by CPaceOQUAKE+ <code>PC-Response</code>.<a href="#section-6.5-5" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="failure-payload">
+<section id="section-6.6">
+        <h3 id="name-failure-payload">
+<a href="#section-6.6" class="section-number selfRef">6.6. </a><a href="#name-failure-payload" class="section-name selfRef">Failure Payload</a>
+        </h3>
+<p id="section-6.6-1">The Failure payload is a uint32 Failure-Code:<a href="#section-6.6-1" class="pilcrow">¶</a></p>
+<table class="center" id="table-3">
+          <caption><a href="#table-3" class="selfRef">Table 3</a></caption>
+<thead>
+            <tr>
+              <th class="text-right" rowspan="1" colspan="1">Value</th>
+              <th class="text-left" rowspan="1" colspan="1">Name</th>
+              <th class="text-left" rowspan="1" colspan="1">Meaning</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="text-right" rowspan="1" colspan="1">0x00000000</td>
+              <td class="text-left" rowspan="1" colspan="1">Reserved</td>
+              <td class="text-left" rowspan="1" colspan="1">Reserved</td>
+            </tr>
+            <tr>
+              <td class="text-right" rowspan="1" colspan="1">0x00000001</td>
+              <td class="text-left" rowspan="1" colspan="1">No Error</td>
+              <td class="text-left" rowspan="1" colspan="1">Failure acknowledgement</td>
+            </tr>
+            <tr>
+              <td class="text-right" rowspan="1" colspan="1">0x00000002</td>
+              <td class="text-left" rowspan="1" colspan="1">Protocol Error</td>
+              <td class="text-left" rowspan="1" colspan="1">Malformed or unexpected message</td>
+            </tr>
+            <tr>
+              <td class="text-right" rowspan="1" colspan="1">0x00000003</td>
+              <td class="text-left" rowspan="1" colspan="1">Identity Unknown</td>
+              <td class="text-left" rowspan="1" colspan="1">No verifier is available for the identity</td>
+            </tr>
+            <tr>
+              <td class="text-right" rowspan="1" colspan="1">0x00000004</td>
+              <td class="text-left" rowspan="1" colspan="1">Authentication Failure</td>
+              <td class="text-left" rowspan="1" colspan="1">Password confirmation or PAKE validation failed</td>
+            </tr>
+            <tr>
+              <td class="text-right" rowspan="1" colspan="1">0x00000005</td>
+              <td class="text-left" rowspan="1" colspan="1">Authorization Failure</td>
+              <td class="text-left" rowspan="1" colspan="1">Authentication succeeded but access is denied</td>
+            </tr>
+            <tr>
+              <td class="text-right" rowspan="1" colspan="1">0x00000006</td>
+              <td class="text-left" rowspan="1" colspan="1">No Config Chosen</td>
+              <td class="text-left" rowspan="1" colspan="1">No acceptable configuration was selected</td>
+            </tr>
+            <tr>
+              <td class="text-right" rowspan="1" colspan="1">0x00000007-0xfeffffff</td>
+              <td class="text-left" rowspan="1" colspan="1">Unassigned</td>
+              <td class="text-left" rowspan="1" colspan="1">Available for assignment</td>
+            </tr>
+            <tr>
+              <td class="text-right" rowspan="1" colspan="1">0xff000000-0xffffffff</td>
+              <td class="text-left" rowspan="1" colspan="1">Private Use</td>
+              <td class="text-left" rowspan="1" colspan="1">Private Use</td>
+            </tr>
+          </tbody>
+        </table>
+<p id="section-6.6-3">When the peer detects an error, it <span class="bcp14">SHOULD</span> send Failure/Response.  The
+server <span class="bcp14">MUST</span> then send EAP-Failure.  When the server detects an error, it
+<span class="bcp14">SHOULD</span> send Failure/Request.  The peer <span class="bcp14">SHOULD</span> answer with
+Failure/Response containing No Error, and the server <span class="bcp14">MUST</span> then send
+EAP-Failure.  Implementations <span class="bcp14">MAY</span> use Authentication Failure instead of
+Identity Unknown to avoid disclosing whether a peer identity exists.<a href="#section-6.6-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="fragmentation">
+<section id="section-7">
+      <h2 id="name-fragmentation">
+<a href="#section-7" class="section-number selfRef">7. </a><a href="#name-fragmentation" class="section-name selfRef">Fragmentation</a>
+      </h2>
+<p id="section-7-1">Post-quantum KEM public keys and ciphertexts can make EAP-PQPAKE
+messages larger than a lower layer's EAP payload limit.  EAP-PQPAKE
+therefore supports fragmentation using the L and M flags in the method
+header.<a href="#section-7-1" class="pilcrow">¶</a></p>
+<p id="section-7-2">Implementations <span class="bcp14">MUST</span> support receiving fragmented EAP-PQPAKE messages.
+An implementation <span class="bcp14">MUST</span> establish a fragmentation threshold.  If the lower
+layer MTU is known, the threshold <span class="bcp14">SHOULD</span> be derived from that MTU.  If no
+lower-layer limit is known, the threshold <span class="bcp14">MUST</span> be 1020 octets.<a href="#section-7-2" class="pilcrow">¶</a></p>
+<p id="section-7-3">The first fragment of a fragmented message <span class="bcp14">MUST</span> set L and M and <span class="bcp14">MUST</span>
+include Total-Length.  Intermediate fragments <span class="bcp14">MUST</span> set M and <span class="bcp14">MUST NOT</span> set
+L.  The final fragment <span class="bcp14">MUST NOT</span> set M and <span class="bcp14">MUST NOT</span> set L.  A
+non-fragmented message <span class="bcp14">MUST NOT</span> set L or M.<a href="#section-7-3" class="pilcrow">¶</a></p>
+<p id="section-7-4">When the peer receives an EAP-PQPAKE Request fragment with M set, it
+<span class="bcp14">MUST</span> respond with an EAP-PQPAKE Response fragment acknowledgement.  The
+acknowledgement uses the same PQPAKE-Exch value, has no payload, and has
+L and M cleared.  When the server receives an EAP-PQPAKE Response
+fragment with M set, it <span class="bcp14">MUST</span> respond with an EAP-PQPAKE Request fragment
+acknowledgement with the same properties.  The next fragment is sent only
+after the acknowledgement is received.<a href="#section-7-4" class="pilcrow">¶</a></p>
+<p id="section-7-5">Receivers <span class="bcp14">MUST</span> reassemble all fragments before parsing the
+exchange-specific payload.  A receiver <span class="bcp14">MUST</span> abort if Total-Length is
+inconsistent with the received fragments, if fragments from different
+exchanges are interleaved, or if the reassembled message exceeds a local
+policy limit.<a href="#section-7-5" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="key-derivation">
+<section id="section-8">
+      <h2 id="name-key-derivation">
+<a href="#section-8" class="section-number selfRef">8. </a><a href="#name-key-derivation" class="section-name selfRef">Key Derivation</a>
+      </h2>
+<p id="section-8-1">After successful processing of Confirm/Response, both endpoints have the
+same CPaceOQUAKE+ method key.  EAP-PQPAKE exports MSK and EMSK as
+required by <span>[<a href="#RFC3748" class="cite xref">RFC3748</a>]</span> and <span>[<a href="#RFC5247" class="cite xref">RFC5247</a>]</span>.<a href="#section-8-1" class="pilcrow">¶</a></p>
+<p id="section-8-2">The Method-ID is:<a href="#section-8-2" class="pilcrow">¶</a></p>
+<div class="lang-pseudocode sourcecode" id="section-8-3">
+<pre>
+Method-ID = H("EAP-PQPAKE Method-ID" ||
+              selected_config ||
+              start_request_payload ||
+              start_response_payload ||
+              pake1_request_payload ||
+              pake1_response_payload ||
+              pake2_request_payload ||
+              pake2_response_payload ||
+              confirm_request_payload ||
+              confirm_response_payload)
+</pre><a href="#section-8-3" class="pilcrow">¶</a>
+</div>
+<p id="section-8-4">The Session-ID is:<a href="#section-8-4" class="pilcrow">¶</a></p>
+<div class="lang-pseudocode sourcecode" id="section-8-5">
+<pre>
+Session-ID = EAP-Type-Code || Method-ID
+</pre><a href="#section-8-5" class="pilcrow">¶</a>
+</div>
+<p id="section-8-6">where EAP-Type-Code is the single-octet EAP method type assigned by
+IANA for EAP-PQPAKE.<a href="#section-8-6" class="pilcrow">¶</a></p>
+<p id="section-8-7">Following the key naming guidance in <span>[<a href="#RFC4962" class="cite xref">RFC4962</a>]</span>, exported key names are:<a href="#section-8-7" class="pilcrow">¶</a></p>
+<div class="lang-pseudocode sourcecode" id="section-8-8">
+<pre>
+MSK-name  = Session-ID || "MSK"
+EMSK-name = Session-ID || "EMSK"
+</pre><a href="#section-8-8" class="pilcrow">¶</a>
+</div>
+<p id="section-8-9">The MSK and EMSK are derived using HKDF <span>[<a href="#RFC5869" class="cite xref">RFC5869</a>]</span> with the hash
+function selected by the configuration:<a href="#section-8-9" class="pilcrow">¶</a></p>
+<div class="lang-pseudocode sourcecode" id="section-8-10">
+<pre>
+exporter_secret = HKDF-Extract(zeros(Hash.length), method_key)
+key_material = HKDF-Expand(exporter_secret,
+                           "EAP-PQPAKE Exported Keys" ||
+                           Session-ID ||
+                           Method-ID,
+                           128)
+MSK  = key_material[0..63]
+EMSK = key_material[64..127]
+</pre><a href="#section-8-10" class="pilcrow">¶</a>
+</div>
+<p id="section-8-11">After deriving the MSK and EMSK, both endpoints <span class="bcp14">MUST</span> erase the
+CPaceOQUAKE+ method key, intermediate PAKE secrets, KEM decapsulation
+secrets, password-confirmation context, and any password-derived seed.
+The same values <span class="bcp14">MUST</span> be erased when the method fails or times out.<a href="#section-8-11" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="security-considerations">
+<section id="section-9">
+      <h2 id="name-security-considerations">
+<a href="#section-9" class="section-number selfRef">9. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
+      </h2>
+<p id="section-9-1">EAP-PQPAKE inherits the cryptographic security properties and limitations
+of CPaceOQUAKE+ <span>[<a href="#I-D.vos-cfrg-pqpake" class="cite xref">I-D.vos-cfrg-pqpake</a>]</span>.  The EAP encapsulation defined
+here binds EAP identities, configuration negotiation, salt, server nonce,
+and all carried CPaceOQUAKE+ messages into the CPaceOQUAKE+ session
+identifier or password-confirmation transcript.  The following claims
+are stated in the style expected for EAP methods used in wireless LANs
+<span>[<a href="#RFC4017" class="cite xref">RFC4017</a>]</span>.<a href="#section-9-1" class="pilcrow">¶</a></p>
+<p id="section-9-2">The hybrid security of CPaceOQUAKE+ depends on the CPaceOQUAKE+
+composition specified in <span>[<a href="#I-D.vos-cfrg-pqpake" class="cite xref">I-D.vos-cfrg-pqpake</a>]</span>.  The sequential
+composition relies on CPace being unconditionally password hiding: the
+CPace transcript does not reveal information about the password-related
+string even if the classical Diffie-Hellman assumption later fails.
+OQUAKE is not assumed to have that unconditional password-hiding
+property; it provides the post-quantum KEM-based component of the
+hybrid design.  EAP-PQPAKE therefore does not define a parallel
+composition and does not permit substituting a different PAKE component
+unless that component is specified by a registered CPaceOQUAKE+
+configuration with an applicable security analysis.<a href="#section-9-2" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-9-3">
+        <dt id="section-9-3.1">Passive attacks:</dt>
+        <dd style="margin-left: 1.5em" id="section-9-3.2">
+          <p id="section-9-3.2.1">A passive attacker observing EAP-PQPAKE messages is not expected to
+learn the password, the CPaceOQUAKE+ method key, the MSK, or the EMSK.
+The method is intended to protect recorded exchanges against attackers
+with future quantum capabilities, subject to the hybrid security
+assumptions of CPaceOQUAKE+.<a href="#section-9-3.2.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-9-3.3">Active attacks:</dt>
+        <dd style="margin-left: 1.5em" id="section-9-3.4">
+          <p id="section-9-3.4.1">An active attacker can drop, delay, replay, or modify EAP messages.
+Such modification causes transcript or confirmation failure unless the
+attacker knows the password or breaks the underlying CPaceOQUAKE+
+assumptions.  Implementations <span class="bcp14">MUST</span> reject unexpected exchange ordering,
+malformed encodings, and configuration mismatches.<a href="#section-9-3.4.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-9-3.5">Dictionary attacks:</dt>
+        <dd style="margin-left: 1.5em" id="section-9-3.6">
+          <p id="section-9-3.6.1">Password authentication methods cannot prevent online guessing.  EAP
+servers <span class="bcp14">MUST</span> implement rate limits or equivalent controls for failed
+authentications.  Implementations <span class="bcp14">SHOULD</span> avoid distinguishable error
+behavior between unknown identities and incorrect passwords.<a href="#section-9-3.6.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-9-3.7">Forward secrecy:</dt>
+        <dd style="margin-left: 1.5em" id="section-9-3.8">
+          <p id="section-9-3.8.1">Compromise of the password after an exchange completes does not reveal
+earlier MSK or EMSK values unless the attacker also breaks the
+underlying assumptions for the recorded exchange.  Server compromise
+that reveals stored verifiers and KEM public keys can enable
+impersonation according to the CPaceOQUAKE+ security model and requires
+credential reprovisioning.<a href="#section-9-3.8.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-9-3.9">Downgrade protection:</dt>
+        <dd style="margin-left: 1.5em" id="section-9-3.10">
+          <p id="section-9-3.10.1">The selected configuration and the server's offered configuration list
+are included in the EAP-PQPAKE transcript.  A downgrade attempt that
+changes negotiation messages is detected during password confirmation.
+Implementations <span class="bcp14">MUST NOT</span> offer configurations that are prohibited by
+local policy.<a href="#section-9-3.10.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-9-3.11">Identity protection:</dt>
+        <dd style="margin-left: 1.5em" id="section-9-3.12">
+          <p id="section-9-3.12.1">EAP-PQPAKE does not encrypt the Start exchange.  A passive observer can
+see the server and peer identities unless this method is used inside a
+protected tunnel or the deployment uses privacy-preserving outer
+identities.  Since identities are inputs to CPaceOQUAKE+ verifier
+generation, deployments need a stable identity plan before
+provisioning verifiers.<a href="#section-9-3.12.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-9-3.13">Verifier handling:</dt>
+        <dd style="margin-left: 1.5em" id="section-9-3.14">
+          <p id="section-9-3.14.1">The server stores the CPaceOQUAKE+ verifier, salt, and KEM public key.
+The password-derived seed used to derive the KEM key pair <span class="bcp14">MUST NOT</span> be
+stored by the server.  Registration and reprovisioning are outside this
+method and need channel authentication and integrity protection.  The
+memory-hard password stretching used by CPaceOQUAKE+ hardens
+password-derived verifier material against offline guessing after
+verifier compromise; it does not replace online rate limiting for EAP
+authentication attempts.<a href="#section-9-3.14.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-9-3.15">Side channels:</dt>
+        <dd style="margin-left: 1.5em" id="section-9-3.16">
+          <p id="section-9-3.16.1">CPaceOQUAKE+ discusses timing considerations for OQUAKE and ML-KEM
+processing.  EAP-PQPAKE implementations <span class="bcp14">MUST</span> use constant-time
+comparison for confirmation values and <span class="bcp14">SHOULD</span> use implementations of
+the selected primitives that address known timing attacks.<a href="#section-9-3.16.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-9-3.17">Denial of service:</dt>
+        <dd style="margin-left: 1.5em" id="section-9-3.18">
+          <p id="section-9-3.18.1">The recommended configuration uses memory-hard password stretching and
+post-quantum cryptography.  Servers <span class="bcp14">SHOULD</span> apply admission control
+before expensive operations, for example by limiting concurrent
+sessions per peer, realm, or lower-layer attachment.<a href="#section-9-3.18.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-9-3.19">Fragmentation:</dt>
+        <dd style="margin-left: 1.5em" id="section-9-3.20">
+          <p id="section-9-3.20.1">Fragmentation increases buffering requirements.  Implementations <span class="bcp14">MUST</span>
+enforce local maximum reassembled lengths and discard incomplete
+fragmented messages on timeout.<a href="#section-9-3.20.1" class="pilcrow">¶</a></p>
+</dd>
+      <dd class="break"></dd>
+</dl>
+</section>
+</div>
+<div id="iana">
+<section id="section-10">
+      <h2 id="name-iana-considerations">
+<a href="#section-10" class="section-number selfRef">10. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
+      </h2>
+<p id="section-10-1">IANA is requested to allocate one EAP Method Type from the "Method Types"
+registry:<a href="#section-10-1" class="pilcrow">¶</a></p>
+<table class="center" id="table-4">
+        <caption><a href="#table-4" class="selfRef">Table 4</a></caption>
+<thead>
+          <tr>
+            <th class="text-right" rowspan="1" colspan="1">Value</th>
+            <th class="text-left" rowspan="1" colspan="1">Description</th>
+            <th class="text-left" rowspan="1" colspan="1">Reference</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="text-right" rowspan="1" colspan="1">TBD1</td>
+            <td class="text-left" rowspan="1" colspan="1">EAP-PQPAKE</td>
+            <td class="text-left" rowspan="1" colspan="1">RFC-TBD</td>
+          </tr>
+        </tbody>
+      </table>
+<p id="section-10-3">IANA is requested to create the "EAP-PQPAKE Exchange Types" registry.
+The registration policy is Specification Required <span>[<a href="#RFC8126" class="cite xref">RFC8126</a>]</span> for values
+0x06 through 0x7f.  Values 0x80 through 0xff are for Private Use.  The
+initial values are listed in <a href="#packet-format" class="auto internal xref">Section 6</a>.<a href="#section-10-3" class="pilcrow">¶</a></p>
+<p id="section-10-4">IANA is requested to create the "EAP-PQPAKE Configurations" registry.
+The registry contains 16-bit values.  The registration policy is
+Specification Required for values 0x0002 through 0x7fff.  Values 0x8000
+through 0xffff are for Private Use.  The initial contents are:<a href="#section-10-4" class="pilcrow">¶</a></p>
+<table class="center" id="table-5">
+        <caption><a href="#table-5" class="selfRef">Table 5</a></caption>
+<thead>
+          <tr>
+            <th class="text-right" rowspan="1" colspan="1">Value</th>
+            <th class="text-left" rowspan="1" colspan="1">Name</th>
+            <th class="text-left" rowspan="1" colspan="1">Reference</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="text-right" rowspan="1" colspan="1">0x0000</td>
+            <td class="text-left" rowspan="1" colspan="1">Reserved</td>
+            <td class="text-left" rowspan="1" colspan="1">RFC-TBD</td>
+          </tr>
+          <tr>
+            <td class="text-right" rowspan="1" colspan="1">0x0001</td>
+            <td class="text-left" rowspan="1" colspan="1">PQPAKE-XWING-MLBUASKEM1024-CPACE-RISTRETTO255-HKDFSHA256-ARGON2ID</td>
+            <td class="text-left" rowspan="1" colspan="1">RFC-TBD</td>
+          </tr>
+        </tbody>
+      </table>
+<p id="section-10-6">IANA is requested to create the "EAP-PQPAKE Identity Types" registry.
+The registry contains 8-bit values.  The registration policy is
+Specification Required for values 0x04 through 0x7f.  Values 0x80
+through 0xff are for Private Use.  The initial values are listed in
+<a href="#identity-types" class="auto internal xref">Section 6.1</a>.<a href="#section-10-6" class="pilcrow">¶</a></p>
+<p id="section-10-7">IANA is requested to create the "EAP-PQPAKE Failure Codes" registry.  The
+registry contains 32-bit values.  The registration policy is
+Specification Required for values 0x00000007 through 0xfeffffff.  Values
+0xff000000 through 0xffffffff are for Private Use.  The initial values
+are listed in <a href="#failure-payload" class="auto internal xref">Section 6.6</a>.<a href="#section-10-7" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="sec-combined-references">
+<section id="section-11">
+      <h2 id="name-references">
+<a href="#section-11" class="section-number selfRef">11. </a><a href="#name-references" class="section-name selfRef">References</a>
+      </h2>
+<div id="sec-normative-references">
+<section id="section-11.1">
+        <h3 id="name-normative-references">
+<a href="#section-11.1" class="section-number selfRef">11.1. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
+        </h3>
+<dl class="references">
+<dt id="I-D.vos-cfrg-pqpake">[I-D.vos-cfrg-pqpake]</dt>
+        <dd>
+<span class="refAuthor">Vos, J.</span>, <span class="refAuthor">Jarecki, S.</span>, and <span class="refAuthor">C. A. Wood</span>, <span class="refTitle">"Hybrid Post-Quantum Password Authenticated Key Exchange"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-vos-cfrg-pqpake-01</span>, <time datetime="2026-04-01" class="refDate">1 April 2026</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-vos-cfrg-pqpake-01">https://datatracker.ietf.org/doc/html/draft-vos-cfrg-pqpake-01</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC2119">[RFC2119]</dt>
+        <dd>
+<span class="refAuthor">Bradner, S.</span>, <span class="refTitle">"Key words for use in RFCs to Indicate Requirement Levels"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 2119</span>, <span class="seriesInfo">DOI 10.17487/RFC2119</span>, <time datetime="1997-03" class="refDate">March 1997</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc2119">https://www.rfc-editor.org/rfc/rfc2119</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC3748">[RFC3748]</dt>
+        <dd>
+<span class="refAuthor">Aboba, B.</span>, <span class="refAuthor">Blunk, L.</span>, <span class="refAuthor">Vollbrecht, J.</span>, <span class="refAuthor">Carlson, J.</span>, and <span class="refAuthor">H. Levkowetz, Ed.</span>, <span class="refTitle">"Extensible Authentication Protocol (EAP)"</span>, <span class="seriesInfo">RFC 3748</span>, <span class="seriesInfo">DOI 10.17487/RFC3748</span>, <time datetime="2004-06" class="refDate">June 2004</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc3748">https://www.rfc-editor.org/rfc/rfc3748</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC5247">[RFC5247]</dt>
+        <dd>
+<span class="refAuthor">Aboba, B.</span>, <span class="refAuthor">Simon, D.</span>, and <span class="refAuthor">P. Eronen</span>, <span class="refTitle">"Extensible Authentication Protocol (EAP) Key Management Framework"</span>, <span class="seriesInfo">RFC 5247</span>, <span class="seriesInfo">DOI 10.17487/RFC5247</span>, <time datetime="2008-08" class="refDate">August 2008</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc5247">https://www.rfc-editor.org/rfc/rfc5247</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC5869">[RFC5869]</dt>
+        <dd>
+<span class="refAuthor">Krawczyk, H.</span> and <span class="refAuthor">P. Eronen</span>, <span class="refTitle">"HMAC-based Extract-and-Expand Key Derivation Function (HKDF)"</span>, <span class="seriesInfo">RFC 5869</span>, <span class="seriesInfo">DOI 10.17487/RFC5869</span>, <time datetime="2010-05" class="refDate">May 2010</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc5869">https://www.rfc-editor.org/rfc/rfc5869</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8126">[RFC8126]</dt>
+        <dd>
+<span class="refAuthor">Cotton, M.</span>, <span class="refAuthor">Leiba, B.</span>, and <span class="refAuthor">T. Narten</span>, <span class="refTitle">"Guidelines for Writing an IANA Considerations Section in RFCs"</span>, <span class="seriesInfo">BCP 26</span>, <span class="seriesInfo">RFC 8126</span>, <span class="seriesInfo">DOI 10.17487/RFC8126</span>, <time datetime="2017-06" class="refDate">June 2017</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8126">https://www.rfc-editor.org/rfc/rfc8126</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8174">[RFC8174]</dt>
+        <dd>
+<span class="refAuthor">Leiba, B.</span>, <span class="refTitle">"Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 8174</span>, <span class="seriesInfo">DOI 10.17487/RFC8174</span>, <time datetime="2017-05" class="refDate">May 2017</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8174">https://www.rfc-editor.org/rfc/rfc8174</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9106">[RFC9106]</dt>
+      <dd>
+<span class="refAuthor">Biryukov, A.</span>, <span class="refAuthor">Dinu, D.</span>, <span class="refAuthor">Khovratovich, D.</span>, and <span class="refAuthor">S. Josefsson</span>, <span class="refTitle">"Argon2 Memory-Hard Function for Password Hashing and Proof-of-Work Applications"</span>, <span class="seriesInfo">RFC 9106</span>, <span class="seriesInfo">DOI 10.17487/RFC9106</span>, <time datetime="2021-09" class="refDate">September 2021</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9106">https://www.rfc-editor.org/rfc/rfc9106</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+</dl>
+</section>
+</div>
+<div id="sec-informative-references">
+<section id="section-11.2">
+        <h3 id="name-informative-references">
+<a href="#section-11.2" class="section-number selfRef">11.2. </a><a href="#name-informative-references" class="section-name selfRef">Informative References</a>
+        </h3>
+<dl class="references">
+<dt id="RFC4017">[RFC4017]</dt>
+        <dd>
+<span class="refAuthor">Stanley, D.</span>, <span class="refAuthor">Walker, J.</span>, and <span class="refAuthor">B. Aboba</span>, <span class="refTitle">"Extensible Authentication Protocol (EAP) Method Requirements for Wireless LANs"</span>, <span class="seriesInfo">RFC 4017</span>, <span class="seriesInfo">DOI 10.17487/RFC4017</span>, <time datetime="2005-03" class="refDate">March 2005</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc4017">https://www.rfc-editor.org/rfc/rfc4017</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC4962">[RFC4962]</dt>
+        <dd>
+<span class="refAuthor">Housley, R.</span> and <span class="refAuthor">B. Aboba</span>, <span class="refTitle">"Guidance for Authentication, Authorization, and Accounting (AAA) Key Management"</span>, <span class="seriesInfo">BCP 132</span>, <span class="seriesInfo">RFC 4962</span>, <span class="seriesInfo">DOI 10.17487/RFC4962</span>, <time datetime="2007-07" class="refDate">July 2007</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc4962">https://www.rfc-editor.org/rfc/rfc4962</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC5931">[RFC5931]</dt>
+        <dd>
+<span class="refAuthor">Harkins, D.</span> and <span class="refAuthor">G. Zorn</span>, <span class="refTitle">"Extensible Authentication Protocol (EAP) Authentication Using Only a Password"</span>, <span class="seriesInfo">RFC 5931</span>, <span class="seriesInfo">DOI 10.17487/RFC5931</span>, <time datetime="2010-08" class="refDate">August 2010</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc5931">https://www.rfc-editor.org/rfc/rfc5931</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC6124">[RFC6124]</dt>
+      <dd>
+<span class="refAuthor">Sheffer, Y.</span>, <span class="refAuthor">Zorn, G.</span>, <span class="refAuthor">Tschofenig, H.</span>, and <span class="refAuthor">S. Fluhrer</span>, <span class="refTitle">"An EAP Authentication Method Based on the Encrypted Key Exchange (EKE) Protocol"</span>, <span class="seriesInfo">RFC 6124</span>, <span class="seriesInfo">DOI 10.17487/RFC6124</span>, <time datetime="2011-02" class="refDate">February 2011</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc6124">https://www.rfc-editor.org/rfc/rfc6124</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+</dl>
+</section>
+</div>
+</section>
+</div>
+<div id="acknowledgments">
+<section id="appendix-A">
+      <h2 id="name-acknowledgments">
+<a href="#name-acknowledgments" class="section-name selfRef">Acknowledgments</a>
+      </h2>
+<p id="appendix-A-1">TODO acknowledge contributors and reviewers.<a href="#appendix-A-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="authors-addresses">
+<section id="appendix-B">
+      <h2 id="name-authors-address">
+<a href="#name-authors-address" class="section-name selfRef">Author's Address</a>
+      </h2>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Hannes Tschofenig</span></div>
+<div dir="auto" class="left"><span class="org">University of the Bundeswehr Munich</span></div>
+<div dir="auto" class="left">
+<span class="postal-code">85577</span> <span class="locality">Neubiberg</span>
+</div>
+<div dir="auto" class="left"><span class="country-name">Germany</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:hannes.tschofenig@gmx.net" class="email">hannes.tschofenig@gmx.net</a>
+</div>
+</address>
+</section>
+</div>
+<script>const toc = document.getElementById("toc");
+toc.querySelector("h2").addEventListener("click", e => {
+  toc.classList.toggle("active");
+});
+toc.querySelector("nav").addEventListener("click", e => {
+  toc.classList.remove("active");
+});
+</script>
+</body>
+</html>
