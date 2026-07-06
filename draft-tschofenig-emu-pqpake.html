@@ -1257,14 +1257,12 @@ CPaceOQUAKE+ as an EAP method.<a href="#section-1-3" class="pilcrow">¶</a></p>
 <p id="section-1-4">CPaceOQUAKE+ is derived from CPaceOQUAKE, a hybrid symmetric PAKE that
 sequentially composes CPace and OQUAKE.  CPace contributes a classical
 PAKE whose transcript is unconditionally password hiding, while OQUAKE
-contributes a post-quantum KEM-based PAKE component.  The sequential
-composition is part of the CPaceOQUAKE+ design and is not a generic
-combiner for arbitrary PAKEs.<a href="#section-1-4" class="pilcrow">¶</a></p>
+contributes a post-quantum KEM-based PAKE component.<a href="#section-1-4" class="pilcrow">¶</a></p>
 <p id="section-1-5">EAP-PQPAKE assumes that the server has been provisioned with the
 CPaceOQUAKE+ password verifiers for the peer.  The registration
 procedure used to create those verifiers is specified by
 CPaceOQUAKE+ and is outside the EAP authentication exchange defined in
-this document.  Registration <span class="bcp14">MUST</span> be performed over a channel that
+this document.  Registration must be performed over a channel that
 authenticates the server and protects the verifier material from
 modification.<a href="#section-1-5" class="pilcrow">¶</a></p>
 <p id="section-1-6">Note: This document version is experimental and relies on a
