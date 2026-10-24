@@ -26,15 +26,21 @@ venue:
 
 author:
 -
-  ins: H. Tschofenig
-  name: Hannes Tschofenig
+  fullname: Hannes Tschofenig
   organization: University of the Bundeswehr Munich
   abbrev: UniBw M.
   city: Neubiberg
-  region: Bavaria
   country: Germany
   code: 85577
   email: hannes.tschofenig@gmx.net
+-
+  fullname: Tirumaleswar Reddy
+  organization: Nokia
+  email: kondtir@gmail.com
+-
+  fullname: Dan Harkins
+  organization: Hewlett-Packard Enterprise
+  email: daniel.harkins@hpe.com
 
 normative:
   RFC2119:
@@ -43,9 +49,8 @@ normative:
   RFC5247:
   RFC5869:
   RFC8126:
-  RFC9106:
+  RFC7914:
   I-D.vos-cfrg-pqpake:
-
 informative:
   RFC4017:
   RFC4962:
@@ -81,7 +86,8 @@ the confidentiality or integrity of subsequent traffic remains valuable
 after the authentication exchange has completed.
 
 This document specifies EAP-PQPAKE, an EAP method that encapsulates
-CPaceOQUAKE+ {{I-D.vos-cfrg-pqpake}}.  CPaceOQUAKE+ is a hybrid
+CPaceOQUAKE+ from Section 8.3 of {{I-D.vos-cfrg-pqpake}}, revision
+`draft-vos-cfrg-pqpake-03`.  CPaceOQUAKE+ is a hybrid
 asymmetric PAKE that combines a classical PAKE component with a
 post-quantum KEM-based component.  EAP-PQPAKE defines the EAP message
 flow, packet formats, method transcript, exported MSK and EMSK
@@ -97,9 +103,10 @@ EAP-PQPAKE assumes that the server has been provisioned with the
 CPaceOQUAKE+ password verifiers for the peer.  The registration
 procedure used to create those verifiers is specified by
 CPaceOQUAKE+ and is outside the EAP authentication exchange defined in
-this document.  Registration must be performed over a channel that
-authenticates the server and protects the verifier material from
-modification.
+this document.  The registered verifier consists of `(v, pk, kem_blind)`;
+the server also stores the salt, configuration, and registration
+identities.  Registration MUST authenticate the server and protect the
+confidentiality and integrity of the verifier material.
 
 Note: This document version is experimental and relies on a
 work in progress PAKE algorithm.
@@ -122,10 +129,23 @@ PRS:
   the password after local password processing.
 
 U:
-: The peer identity input to CPaceOQUAKE+.
+: The peer identity used when registering the CPaceOQUAKE+ verifier.
 
 S:
-: The server identity input to CPaceOQUAKE+.
+: The server identity used when registering the CPaceOQUAKE+ verifier.
+
+kem_blind:
+: A secret, random 32-octet part of the registered verifier.  It blinds
+  password-derived KEM key generation and is sent to the peer only in
+  encrypted form during password confirmation.
+
+public_context:
+: Public session information encoded with `EncodePublicContext` as
+  specified in Appendix C.1 of {{I-D.vos-cfrg-pqpake}}.
+
+secret_context:
+: Confidential context shared by the PAKE endpoints.  EAP-PQPAKE passes
+  the empty octet string as this input to CPaceOQUAKE+.
 
 Config:
 : A registered set of CPaceOQUAKE+ algorithms and parameters.
@@ -146,9 +166,10 @@ opaque16:
 
 EAP is a lock-step request/response protocol in which the EAP server
 sends each Request and the EAP peer sends the corresponding Response.
-CPaceOQUAKE+ is initiated by the client.  EAP-PQPAKE therefore uses an
-empty server request to solicit the first CPaceOQUAKE+ flight from the
-peer after identity and configuration negotiation have completed.
+CPaceOQUAKE+ is initiated by the client.  EAP-PQPAKE therefore uses a
+server request carrying the salt and a fresh nonce to solicit the first
+CPaceOQUAKE+ message from the peer after identity and configuration
+negotiation have completed.
 
 A successful EAP-PQPAKE exchange has the following shape:
 
@@ -163,18 +184,19 @@ A successful EAP-PQPAKE exchange has the following shape:
 
                           EAP-PQPAKE-PAKE1/Request
                   <---------------------------------
- EAP-PQPAKE-PAKE1/Response  (s1, msg1)
+ EAP-PQPAKE-PAKE1/Response  (msg1: Ya)
  --------------------------------->
 
                           EAP-PQPAKE-PAKE2/Request
-                          (s2, msg2, msg3)
+                          (msg2: Yb, s, T, rho)
                   <---------------------------------
- EAP-PQPAKE-PAKE2/Response  (msg4)
+ EAP-PQPAKE-PAKE2/Response  (msg3: ct, h)
  --------------------------------->
 
-                          EAP-PQPAKE-Confirm/Request (chal)
+                          EAP-PQPAKE-Confirm/Request
+                          (msg4: enc_c, client_confirm)
                   <---------------------------------
- EAP-PQPAKE-Confirm/Response  (resp)
+ EAP-PQPAKE-Confirm/Response  (msg5: server_confirm)
  --------------------------------->
 
                           EAP-Success
@@ -183,11 +205,11 @@ A successful EAP-PQPAKE exchange has the following shape:
 
 The Start exchange negotiates one CPaceOQUAKE+ configuration and
 identifies the peer and server.  After receiving the peer identity, the
-server locates the stored verifier, password-confirmation KEM public
-key, and salt for that peer and selected configuration.  The PAKE1 and
-PAKE2 exchanges carry the three CPaceOQUAKE flights: `(s1, msg1)`,
-`(s2, msg2, msg3)`, and `msg4`.  The Confirm exchange carries the
-CPaceOQUAKE+ password confirmation messages `chal` and `resp`.
+server locates the stored `(v, pk, kem_blind)` and salt for that peer
+and selected configuration.  The PAKE1 and PAKE2 exchanges carry the
+first three CPaceOQUAKE+ messages.  The Confirm exchange carries the
+password confirmation challenge `msg4` and response `msg5`.  The field
+`rho` in the diagram denotes the public matrix seed of ML-BUA-sKEM.
 
 On success, both endpoints derive the EAP MSK and EMSK from the
 CPaceOQUAKE+ method key.  On failure, either endpoint can send an
@@ -197,8 +219,10 @@ EAP-Failure.
 # CPaceOQUAKE+ Use
 {: #cpaceoquake-use}
 
-EAP-PQPAKE uses CPaceOQUAKE+ as specified in {{I-D.vos-cfrg-pqpake}},
-with the following mapping.
+EAP-PQPAKE uses the six CPaceOQUAKE+ functions in Section 8.3 of
+{{I-D.vos-cfrg-pqpake}}.  The peer calls `Init`, `InitiatorContinue`,
+and `InitiatorFinish`; the server calls `Respond`, `ResponderContinue`,
+and `ResponderFinish`.
 
 The CPaceOQUAKE+ messages carried by this method are opaque to
 EAP-PQPAKE.  Implementations that implement CPaceOQUAKE+ directly, rather
@@ -212,49 +236,78 @@ ciphertexts unless the selected CPaceOQUAKE+ configuration explicitly
 requires it.
 
 The peer computes the CPaceOQUAKE+ verifier material `(v, seed)` from
-PRS, salt, U, and S using `GenVerifierMaterial`.  The server stores the
-salt, verifier `v`, and password-confirmation KEM public key `pk` for
-the peer.  The server MUST NOT store the seed that CPaceOQUAKE+ derives
-from the password.
+PRS, salt, U, and S using `GenVerifierMaterial`.  At registration,
+`GenVerifier` creates `(v, pk, kem_blind)`: it samples a fresh
+`kem_blind` and derives the KEM key pair from
+`DeriveKEMSeed(seed, kem_blind)`.  The server MUST store `v`, `pk`,
+`kem_blind`, the 32-octet salt, the configuration, and the registration
+identities.  It MUST NOT store `seed` or the corresponding KEM secret
+key.  The server MUST NOT disclose `kem_blind` in the Start or PAKE1
+exchange; CPaceOQUAKE+ carries it only inside the encrypted password
+confirmation challenge.
 
-The CPaceOQUAKE+ session identifier `sid` is:
+The EAP-PQPAKE session identifier `sid` and CPaceOQUAKE+ contexts are:
 
 ~~~ pseudocode
 sid = H("EAP-PQPAKE sid" ||
-        start_request_payload ||
-        start_response_payload ||
-        pake1_request_payload)
+        lv_encode(start_request_payload) ||
+        lv_encode(start_response_payload) ||
+        lv_encode(pake1_request_payload))
+public_context = EncodePublicContext(sid, U, S)
+secret_context = b""
 ~~~
 
-where `H` is the hash function selected by the EAP-PQPAKE configuration.
-The peer identity U is the Identity field from the Start/Response.  The
-server identity S is the Identity field from the Start/Request.  Both
-identities are the exact encoded octet strings sent on the wire, not a
-display-normalized form.
+Here `H` is the EAP hash selected by the configuration and `lv_encode`
+is the two-octet length-prefix encoding defined in
+{{I-D.vos-cfrg-pqpake}}.  Each `_payload` value is the complete
+exchange-specific payload after reassembly, including its field length
+prefixes.  It excludes the EAP header, Flags, PQPAKE-Exch, Total-Length,
+and fragmentation acknowledgements.  Quoted labels are ASCII octets
+without a terminating zero.
 
-The CPaceOQUAKE+ password-confirmation transcript `tx` is:
+U is the Peer-ID value from Start/Response, excluding its type and
+length; S is the Server-ID value from Start/Request, excluding its type
+and length.  These MUST be the exact octet strings used for verifier
+registration.  A peer MUST check S against its configured registration
+before starting the PAKE.  Implementations MUST NOT normalize these
+octet strings during the exchange.  Changing either registration
+identity requires reprovisioning.  The identity types and their wire
+encodings are also bound through `sid`.
 
-~~~ pseudocode
-tx = H("EAP-PQPAKE transcript" ||
-       start_request_payload ||
-       start_response_payload ||
-       pake1_request_payload ||
-       pake1_response_payload ||
-       pake2_request_payload ||
-       pake2_response_payload)
-~~~
+`EncodePublicContext` MUST use the four-octet, big-endian length
+prefixes from Appendix C.1 of {{I-D.vos-cfrg-pqpake}}.  Both endpoints
+pass the resulting `public_context` and the empty `secret_context` to
+their initial CPaceOQUAKE+ call.  CPaceOQUAKE internally supplies the
+first stage's key and transcript hash as the contexts for OQUAKE.
 
-The hash input includes the complete EAP-PQPAKE payloads, excluding EAP
-Code, Identifier, Length, Type, fragmentation flags, Total-Length, and
-fragmentation acknowledgements.  This binds the selected configuration,
-identities, salt, server nonce, and all CPaceOQUAKE messages into the
-password confirmation stage.  This value is used as the `transcript`
-input to the CPaceOQUAKE+ `PC-Challenge` and `PC-Response` functions.
+The CPaceOQUAKE+ functions compute their own transcript hash `th`.
+Password confirmation uses the `SK` and `th` output by the symmetric
+CPaceOQUAKE stage: `PC.Challenge(SK, th, pk, kem_blind)` and
+`PC.Respond(SK, th, seed, challenge)`.  Implementations MUST preserve
+these inputs exactly; they MUST NOT substitute an EAP-specific
+transcript hash for `th`.  The initial public context binds the EAP
+configuration negotiation, identities, salt, and server nonce, while
+the internal transcript hashes bind the subsequent PAKE messages.
+The final `th` is returned with `client_key` or `server_key` after
+successful password confirmation.
 
-An implementation MUST abort the exchange if any CPaceOQUAKE+ operation
-raises an authentication error, if a received cryptographic message is
-not valid for the selected configuration, or if the selected
-configuration does not match one offered by the server.
+The intermediate `SK` MUST NOT be used for EAP key export.  The server
+MUST NOT release or use the candidate key held in the state returned
+by `ResponderContinue` until `ResponderFinish` succeeds.  The peer
+obtains its method key only after `InitiatorFinish` verifies the
+server's password confirmation value.
+
+An implementation MUST abort the exchange if a CPaceOQUAKE+ operation
+raises `AuthenticationError`, `CPaceError`, or another surfaced
+cryptographic failure, if a received message has incorrect length or
+framing for the selected configuration, or if the selected configuration
+does not match one offered by the server.
+
+OQUAKE's implicit rejection and random-key behavior MUST be preserved.
+An implementation MUST NOT expose a distinguishable error for an
+OQUAKE confirmation mismatch that the underlying protocol handles by
+returning an unrelated key.  Such a mismatch is detected during the
+subsequent password confirmation exchange.
 
 # Configurations
 
@@ -262,23 +315,53 @@ An EAP-PQPAKE configuration identifies all cryptographic parameters
 needed by CPaceOQUAKE+ and the EAP exporter.  This document defines one
 mandatory-to-implement configuration:
 
-PQPAKE-XWING-MLBUASKEM1024-CPACE-RISTRETTO255-HKDFSHA256-ARGON2ID:
-: This configuration uses the recommended CPaceOQUAKE+ configuration
-  from {{I-D.vos-cfrg-pqpake}}: CPACE-RISTR255-SHA512, X-Wing for the
-  password-confirmation KEM, HKDF-SHA-256 for the
-  password-confirmation KDF, Argon2id {{RFC9106}} with the parameters
-  specified by CPaceOQUAKE+, ML-BUA-sKEM1024 for OQUAKE, HKDF-SHA-256
-  for the PAKE KDF, SHA-256 as the general-purpose hash, and the
-  CPaceOQUAKE+ recommended domain separation tag.  The ML-BUA-sKEM1024
-  OQUAKE parameters, including Kemeleon security parameter and public-key
-  and ciphertext lengths, are those specified by CPaceOQUAKE+ for this
-  configuration.
+`cpaceoquakeplus-x25519-mlbuaskem1024-xwing`:
+: The preferred configuration in Section 9.5.1 of
+  {{I-D.vos-cfrg-pqpake}}, with the common parameters from Section 9.1.
+
+| Component | Algorithm or parameter |
+|---|---|
+| CPace group | CPACE-X25519-SHA512 |
+| CPace hash | SHA-512 |
+| OQUAKE BUA-sKEM | ML-BUA-sKEM-1024 |
+| PAKE-KDF | HKDF-SHA-256 |
+| Password-confirmation KEM | X-Wing |
+| PC-KDF | HKDF-SHA-256 |
+| PC-KSF | scrypt(N = 32768, r = 8, p = 1) |
+| Common parameters | Nv = 32, Nkc = 32, Nr = 64, Nkey = 32 |
+| EAP hash H and HKDF hash | SHA-256 |
+
+The scrypt function is specified in {{RFC7914}}.  For ML-BUA-sKEM-1024,
+Kemeleon.t is 132, Npk is 1596, Nt is 1564, the public matrix seed is
+32 octets, and Nct is 1568.  For the X-Wing password-confirmation KEM,
+Nseed is 32, Npk is 1216, and Nct is 1120.  This configuration requires
+both ML-KEM-1024 for OQUAKE and ML-KEM-768 as used by X-Wing.
+
+The domain separation tag is the following 32-octet value, shown in
+hexadecimal:
+
+~~~
+7de162c387ba1bad9c790e7e56bd245d6753d045185cbc3972eba34ddac1a9db
+~~~
+
+This CPaceOQUAKE+ DST MUST be used throughout CPace, OQUAKE, transcript
+hashing, verifier generation, and password confirmation.  It MUST NOT
+be combined with the DST values of standalone CPaceOQUAKE or OQUAKE
+configurations.
 
 Implementations conforming to this document MUST implement this
 configuration.  Other configurations MAY be registered as described in
 {{iana}}.  New configurations MUST specify the complete CPaceOQUAKE+
-parameter set and MUST use a hybrid KEM for the password-confirmation
-KEM, as required by CPaceOQUAKE+.
+parameter set, satisfy Section 9.6 of {{I-D.vos-cfrg-pqpake}}, and use
+a hybrid KEM for password confirmation.  They MUST also specify the EAP
+hash and the HKDF hash used by {{key-derivation}}.
+
+This configuration and the `-03` message formats are incompatible with
+the Ristretto255/Argon2id configuration and encodings in earlier
+versions of this EAP draft.  Deployments using those versions MUST
+reprovision verifiers with `GenVerifier` from the referenced revision,
+including a fresh `kem_blind`.  The old verifier material MUST NOT be
+reinterpreted as a registration for this configuration.
 
 # Packet Format
 
@@ -398,41 +481,52 @@ The Start/Response payload is sent by the peer:
 Selected-Config MUST be one of the Config-ID values in the
 Start/Request.  Peer-ID is an opaque16 field preceded by Peer-IDType.
 The server uses Selected-Config and Peer-ID to locate the peer's stored
-salt, verifier, and password-confirmation KEM public key.
+salt and verifier `(v, pk, kem_blind)` for its Server-ID.
 
 ## CPaceOQUAKE+ Message Mapping
 
 EAP-PQPAKE carries the five CPaceOQUAKE+ protocol messages as EAP
-payload fields.  The first three fields carry the encoded messages of
-the CPaceOQUAKE subprotocol inside CPaceOQUAKE+.  The EAP exchanges map
-to the CPaceOQUAKE+ functions in {{I-D.vos-cfrg-pqpake}} as follows:
+payload fields.  Each field contains the complete serialized message
+specified in Appendix C.5 of {{I-D.vos-cfrg-pqpake}}, inside an EAP
+`opaque16` field.  This outer length prefix is additional to any length
+prefix inside the serialized message.  The EAP exchanges map to the
+CPaceOQUAKE+ functions as follows:
 
 | EAP-PQPAKE field | Sender | Source value |
 |---|---|---|
-| CPaceOQUAKE-msg1 | peer | `(s1, msg1)` from `CPaceOQUAKE.Init` |
-| CPaceOQUAKE-msg2 | server | `(s2, msg2, msg3)` from `CPaceOQUAKE.Respond` |
-| CPaceOQUAKE-msg3 | peer | `msg4` from `CPaceOQUAKE.InitiatorFinish` |
-| PC-Challenge | server | `challenge` from `PC-Challenge` |
-| PC-Response | peer | `response` from `PC-Response` |
+| CPaceOQUAKE-msg1 | peer | `msg1` from `CPaceOQUAKE+.Init` |
+| CPaceOQUAKE-msg2 | server | `msg2` from `CPaceOQUAKE+.Respond` |
+| CPaceOQUAKE-msg3 | peer | `msg3` from `CPaceOQUAKE+.InitiatorContinue` |
+| PC-Challenge | server | `msg4` from `CPaceOQUAKE+.ResponderContinue` |
+| PC-Response | peer | `msg5` from `CPaceOQUAKE+.InitiatorFinish` |
 
-Here, `v` is the CPaceOQUAKE+ verifier for the selected peer and
-configuration.  The peer computes `v` and `seed` from PRS, salt, U, and
-S using `GenVerifierMaterial`; the server uses the stored `v` and
-password-confirmation KEM public key `pk` for the peer.  `pk` is
-generated during CPaceOQUAKE+ registration.  `SK` is the symmetric key
-output by the CPaceOQUAKE phase before password confirmation, and `tx`
-is the EAP-PQPAKE password-confirmation transcript defined in
-{{cpaceoquake-use}}.
+The following sequence uses the contexts and registration values from
+{{cpaceoquake-use}}.  Each returned state replaces the endpoint's
+previous state.  Serialization and parsing use Appendix C.5 of
+{{I-D.vos-cfrg-pqpake}} at the EAP payload boundary.
 
-The tuple notation in this table follows the CPaceOQUAKE flow in
-{{I-D.vos-cfrg-pqpake}}.  On the wire, CPaceOQUAKE-msg1 is the encoded
-`init_msg` returned by `CPaceOQUAKE.Init`, consisting of `s1` followed
-by `lv_encode(msg1)`.  CPaceOQUAKE-msg2 is the encoded `resp_msg`
-returned by `CPaceOQUAKE.Respond`, consisting of `s2` followed by
-`lv_encode(msg2)` and `lv_encode(msg3)`.  CPaceOQUAKE-msg3 is the
-`msg4` returned by `CPaceOQUAKE.InitiatorFinish`.  `PC-Challenge` is
-invoked with `SK`, `tx`, `pk`, `sid`, U, and S.  `PC-Response` is
-invoked with `SK`, `tx`, `seed`, `challenge`, `sid`, U, and S.
+~~~ pseudocode
+peer_state, msg1 = CPaceOQUAKE+.Init(
+    PRS, salt, U, S, public_context, secret_context)
+server_state, msg2 = CPaceOQUAKE+.Respond(
+    v, public_context, secret_context, msg1)
+peer_state, msg3 = CPaceOQUAKE+.InitiatorContinue(
+    peer_state, msg2)
+server_state, msg4 = CPaceOQUAKE+.ResponderContinue(
+    server_state, msg3, pk, kem_blind)
+client_key, msg5, th = CPaceOQUAKE+.InitiatorFinish(
+    peer_state, msg4)
+server_key, th = CPaceOQUAKE+.ResponderFinish(server_state, msg5)
+~~~
+
+Before invoking a function that consumes a message, the receiver MUST
+have reassembled the complete EAP payload and checked all field lengths
+and framing.  Missing, duplicated, or additional fields MUST cause the
+exchange to abort.  EAP fragmentation MUST NOT change field values,
+message direction, or processing order, as required by Appendix D of
+{{I-D.vos-cfrg-pqpake}}.  Retransmissions MUST reuse the original
+encoded messages and cached EAP Responses; they MUST NOT cause a
+CPaceOQUAKE+ operation to run again on the same state.
 
 ## PAKE1 Payloads
 
@@ -449,8 +543,8 @@ The PAKE1/Request payload is sent by the server:
 ~~~
 
 Server-Nonce is an opaque16 field containing at least 32 octets of
-fresh random data generated by the server.  Salt is the opaque16 salt
-stored for the selected peer and configuration.
+fresh random data generated by the server.  Salt is an opaque16 field
+containing the 32-octet salt stored for the selected registration.
 
 The PAKE1/Response payload is sent by the peer:
 
@@ -461,9 +555,10 @@ The PAKE1/Response payload is sent by the peer:
 ~~~
 
 CPaceOQUAKE-msg1 is an opaque16 field containing the first
-CPaceOQUAKE+ message.  It is the encoded `init_msg` returned by
-`CPaceOQUAKE.Init`, corresponding to `(s1, msg1)` in
-{{I-D.vos-cfrg-pqpake}}.
+CPaceOQUAKE+ message `msg1`, returned by `CPaceOQUAKE+.Init`.
+Its contents are `lv_encode(Ya)`, where `Ya` is the CPace initiator
+message.  The internal `lv_encode` prefix MUST be retained inside the
+EAP opaque16 field.
 
 ## PAKE2 Payloads
 
@@ -485,10 +580,12 @@ The PAKE2/Response payload is sent by the peer:
 
 Both fields are encoded as opaque16 values.
 
-CPaceOQUAKE-msg2 is the encoded `resp_msg` returned by
-`CPaceOQUAKE.Respond`, corresponding to `(s2, msg2, msg3)` in
-{{I-D.vos-cfrg-pqpake}}.  CPaceOQUAKE-msg3 is the `msg4` returned by
-`CPaceOQUAKE.InitiatorFinish`.
+CPaceOQUAKE-msg2 contains `msg2` from `CPaceOQUAKE+.Respond`, encoded
+as `lv_encode(Yb) || s || T || rho`.  `Yb` is the CPace responder
+message; `(s, T, rho)` is the OQUAKE initiator message.  CPaceOQUAKE-msg3
+contains `msg3` from `CPaceOQUAKE+.InitiatorContinue`, encoded as
+`ct || h`, the OQUAKE responder message.  The lengths of `s`, `T`,
+`rho`, `ct`, and `h` are determined by the selected configuration.
 
 ## Confirm Payloads
 
@@ -508,9 +605,26 @@ The Confirm/Response payload is sent by the peer:
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ~~~
 
-Both fields are encoded as opaque16 values.  PC-Challenge is the
-challenge output by CPaceOQUAKE+ `PC-Challenge`.  PC-Response is the
-response output by CPaceOQUAKE+ `PC-Response`.
+Both fields are encoded as opaque16 values.  PC-Challenge contains
+`msg4` from `CPaceOQUAKE+.ResponderContinue`, encoded as
+`enc_c || client_confirm`.  `enc_c` encrypts the password-confirmation
+KEM ciphertext together with `kem_blind`; its length is the
+password-confirmation KEM's Nct plus 32 octets.  `client_confirm` has
+Nkc octets.  PC-Response contains `msg5` from
+`CPaceOQUAKE+.InitiatorFinish`, which is the Nkc-octet
+`server_confirm`.  The confirmation names follow the underlying PAKE:
+the server sends `client_confirm` and the peer sends `server_confirm`.
+
+For the mandatory configuration, the serialized messages have the
+following lengths, excluding the EAP opaque16 prefix and packet header:
+
+| Message | Length in octets |
+|---|---:|
+| CPaceOQUAKE-msg1 | 34 |
+| CPaceOQUAKE-msg2 | 1694 |
+| CPaceOQUAKE-msg3 | 1600 |
+| PC-Challenge | 1184 |
+| PC-Response | 32 |
 
 ## Failure Payload
 
@@ -568,24 +682,26 @@ policy limit.
 
 # Key Derivation
 
-After successful processing of Confirm/Response, both endpoints have the
-same CPaceOQUAKE+ method key.  EAP-PQPAKE exports MSK and EMSK as
-required by {{RFC3748}} and {{RFC5247}}.
+The peer obtains `client_key` and the final transcript hash `th` from
+`CPaceOQUAKE+.InitiatorFinish` after verifying Confirm/Request.  The
+server obtains the matching `server_key` and `th` from
+`CPaceOQUAKE+.ResponderFinish` after verifying Confirm/Response.  These
+keys are the method key used below.  No intermediate PAKE key or
+unverified candidate key may be exported.  EAP-PQPAKE exports MSK and
+EMSK as required by {{RFC3748}} and {{RFC5247}}.
 
 The Method-ID is:
 
 ~~~ pseudocode
 Method-ID = H("EAP-PQPAKE Method-ID" ||
-              selected_config ||
-              start_request_payload ||
-              start_response_payload ||
-              pake1_request_payload ||
-              pake1_response_payload ||
-              pake2_request_payload ||
-              pake2_response_payload ||
-              confirm_request_payload ||
-              confirm_response_payload)
+              uint16(Selected-Config) || lv_encode(th))
 ~~~
+
+`th` is the final CPaceOQUAKE+ transcript hash, which binds the
+initial EAP public context and all five protocol messages, including
+both password confirmation values.  It MUST NOT be replaced by the
+transcript hash of an intermediate PAKE stage.  `Selected-Config` is
+encoded as the two-octet value selected in Start/Response.
 
 The Session-ID is:
 
@@ -603,8 +719,9 @@ MSK-name  = Session-ID || "MSK"
 EMSK-name = Session-ID || "EMSK"
 ~~~
 
-The MSK and EMSK are derived using HKDF {{RFC5869}} with the hash
-function selected by the configuration:
+The MSK and EMSK are derived using HKDF {{RFC5869}} with the EAP HKDF
+hash selected by the configuration (SHA-256 for the mandatory
+configuration).  `Hash.length` is that hash's output length in octets:
 
 ~~~ pseudocode
 exporter_secret = HKDF-Extract(zeros(Hash.length), method_key)
@@ -613,24 +730,27 @@ key_material = HKDF-Expand(exporter_secret,
                            Session-ID ||
                            Method-ID,
                            128)
-MSK  = key_material[0..63]
-EMSK = key_material[64..127]
+MSK  = key_material[0:64]
+EMSK = key_material[64:128]
 ~~~
+
+The slice end indexes are exclusive; MSK and EMSK are each 64 octets.
 
 After deriving the MSK and EMSK, both endpoints MUST erase the
 CPaceOQUAKE+ method key, intermediate PAKE secrets, KEM decapsulation
-secrets, password-confirmation context, and any password-derived seed.
-The same values MUST be erased when the method fails or times out.
+secrets, password-confirmation state, and ephemeral copies of the
+password-derived seed and `kem_blind`.  This does not erase the server's
+stored registration.  Ephemeral secrets and any unexported candidate
+keys MUST also be erased when the method fails or times out.
 
 # Security Considerations
 
 EAP-PQPAKE inherits the cryptographic security properties and limitations
 of CPaceOQUAKE+ {{I-D.vos-cfrg-pqpake}}.  The EAP encapsulation defined
 here binds EAP identities, configuration negotiation, salt, server nonce,
-and all carried CPaceOQUAKE+ messages into the CPaceOQUAKE+ session
-identifier or password-confirmation transcript.  The following claims
-are stated in the style expected for EAP methods used in wireless LANs
-{{RFC4017}}.
+and all carried CPaceOQUAKE+ messages through its public context and
+internal transcript hashes.  The following claims are stated in the
+style expected for EAP methods used in wireless LANs {{RFC4017}}.
 
 The hybrid security of CPaceOQUAKE+ depends on the CPaceOQUAKE+
 composition specified in {{I-D.vos-cfrg-pqpake}}.  The sequential
@@ -644,6 +764,16 @@ composition and does not permit substituting a different PAKE component
 unless that component is specified by a registered CPaceOQUAKE+
 configuration with an applicable security analysis.
 
+Section 11.2 of {{I-D.vos-cfrg-pqpake}} qualifies the post-quantum
+security analysis: the UC proofs use the classical random oracle model.
+OQUAKE-style protocols do not realize the standard UC PAKE
+functionality with quantum random-oracle access under the cited
+analysis, although this does not yield an attack recovering passwords
+or keys and a closely related protocol has a stand-alone game-based
+proof in that model.  EAP-PQPAKE does not claim a stronger quantum UC
+result.  Its security against quantum attackers relies on OQUAKE;
+CPace alone does not provide post-quantum PAKE security.
+
 Passive attacks:
 : A passive attacker observing EAP-PQPAKE messages is not expected to
   learn the password, the CPaceOQUAKE+ method key, the MSK, or the EMSK.
@@ -656,7 +786,8 @@ Active attacks:
   Such modification causes transcript or confirmation failure unless the
   attacker knows the password or breaks the underlying CPaceOQUAKE+
   assumptions.  Implementations MUST reject unexpected exchange ordering,
-  malformed encodings, and configuration mismatches.
+  malformed encodings, and configuration mismatches, while preserving
+  OQUAKE's implicit rejection behavior described in {{cpaceoquake-use}}.
 
 Dictionary attacks:
 : Password authentication methods cannot prevent online guessing.  EAP
@@ -667,10 +798,13 @@ Dictionary attacks:
 Forward secrecy:
 : Compromise of the password after an exchange completes does not reveal
   earlier MSK or EMSK values unless the attacker also breaks the
-  underlying assumptions for the recorded exchange.  Server compromise
-  that reveals stored verifiers and password-confirmation KEM public
-  keys can enable impersonation according to the CPaceOQUAKE+ security
-  model and requires credential reprovisioning.
+  underlying assumptions for the recorded exchange.  Compromise of the
+  full registered verifier `(v, pk, kem_blind)` permits offline password
+  guessing and server impersonation to the peer.  It does not by itself
+  permit client impersonation without recovering the password, the
+  password-derived seed, or the corresponding decapsulation key, as
+  discussed in Section 11.5 of {{I-D.vos-cfrg-pqpake}}.  Affected
+  credentials require reprovisioning.
 
 Downgrade protection:
 : The selected configuration and the server's offered configuration list
@@ -682,33 +816,42 @@ Downgrade protection:
 Identity protection:
 : EAP-PQPAKE does not encrypt the Start exchange.  A passive observer can
   see the server and peer identities unless this method is used inside a
-  protected tunnel or the deployment uses privacy-preserving outer
-  identities.  Since identities are inputs to CPaceOQUAKE+ verifier
-  generation, deployments need a stable identity plan before
-  provisioning verifiers.
+  protected tunnel.  An anonymous outer EAP identity alone does not hide
+  the identities in the Start exchange.  This mapping uses the same
+  identities for registration and the session public context; the
+  underlying PAKE permits these to differ, but this document does not
+  define such an identity mapping.  Changing a registration identity
+  requires recomputing and reprovisioning the verifier.
 
 Verifier handling:
-: The server stores the CPaceOQUAKE+ verifier, salt, and
-  password-confirmation KEM public key.  The password-derived seed used
-  to derive the password-confirmation KEM key pair MUST NOT be stored by
-  the server.  Registration and reprovisioning are outside this method
-  and need channel authentication and integrity protection.  The
-  memory-hard password stretching used by CPaceOQUAKE+ hardens
+: The server stores the salt and the CPaceOQUAKE+ verifier
+  `(v, pk, kem_blind)`.  The password-derived seed used to derive the
+  password-confirmation KEM key pair MUST NOT be stored by the server.
+  Registration and reprovisioning are outside this method
+  and need channel authentication, confidentiality, and integrity.  A
+  fresh secret `kem_blind` is required for each registration and MUST
+  be protected with the rest of the verifier.  The memory-hard password
+  stretching used by CPaceOQUAKE+ hardens
   password-derived verifier material against offline guessing after
   verifier compromise; it does not replace online rate limiting for EAP
   authentication attempts.
 
 Side channels:
 : CPaceOQUAKE+ discusses timing considerations for OQUAKE and ML-KEM
-  processing.  EAP-PQPAKE implementations MUST use constant-time
-  comparison for confirmation values and SHOULD use implementations of
-  the selected primitives that address known timing attacks.
+  processing.  In addition to the Tempo construction used by OQUAKE,
+  the augmented transformation blinds KEM key generation with
+  `kem_blind`.  Removing this blinding or disclosing `kem_blind` before
+  password confirmation invalidates that protection.  Implementations
+  MUST preserve the blinding and its encryption, use constant-time
+  comparison for confirmation values, and keep Kemeleon.EncodeEk
+  randomness secret.  They SHOULD use implementations of the selected
+  primitives that address known timing attacks.
 
 Denial of service:
-: The recommended configuration uses memory-hard password stretching and
-  post-quantum cryptography.  Servers SHOULD apply admission control
-  before expensive operations, for example by limiting concurrent
-  sessions per peer, realm, or lower-layer attachment.
+: The recommended configuration uses scrypt password stretching on the
+  peer and post-quantum cryptography on both endpoints.  Servers SHOULD
+  apply admission control before expensive operations, for example by
+  limiting concurrent sessions per peer, realm, or lower-layer attachment.
 
 Fragmentation:
 : Fragmentation increases buffering requirements.  Implementations MUST
@@ -738,7 +881,7 @@ through 0xffff are for Private Use.  The initial contents are:
 | Value | Name | Reference |
 |---:|---|---|
 | 0x0000 | Reserved | RFC-TBD |
-| 0x0001 | PQPAKE-XWING-MLBUASKEM1024-CPACE-RISTRETTO255-HKDFSHA256-ARGON2ID | RFC-TBD |
+| 0x0001 | cpaceoquakeplus-x25519-mlbuaskem1024-xwing | RFC-TBD |
 
 IANA is requested to create the "EAP-PQPAKE Identity Types" registry.
 The registry contains 8-bit values.  The registration policy is
