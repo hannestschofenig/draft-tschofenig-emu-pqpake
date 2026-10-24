@@ -6,6 +6,8 @@
 <meta content="initial-scale=1.0" name="viewport">
 <title>The EAP-PQPAKE Authentication Method</title>
 <meta content="Hannes Tschofenig" name="author">
+<meta content="Tirumaleswar Reddy" name="author">
+<meta content="Dan Harkins" name="author">
 <meta content="
        This document defines EAP-PQPAKE, an Extensible Authentication Protocol
 (EAP) method that uses a hybrid post-quantum password-authenticated key
@@ -13,26 +15,26 @@ exchange.  The method is based on the CPaceOQUAKE+ asymmetric PAKE and
 provides mutual authentication and EAP key export from a password without
 requiring public-key certificates during normal authentication. 
     " name="description">
-<meta content="xml2rfc 3.34.0" name="generator">
+<meta content="xml2rfc 3.34.1" name="generator">
 <meta content="EAP" name="keyword">
 <meta content="PAKE" name="keyword">
 <meta content="post-quantum" name="keyword">
 <meta content="password authentication" name="keyword">
 <meta content="draft-tschofenig-emu-pqpake-latest" name="ietf.draft">
 <!-- Generator version information:
-  xml2rfc 3.34.0
-    Python 3.14.5
-    ConfigArgParse 1.7.5
+  xml2rfc 3.34.1
+    Python 3.14.8
+    ConfigArgParse 1.8.0
     google-i18n-address 3.1.1
     intervaltree 3.2.1
     Jinja2 3.1.6
     lxml 6.1.1
     natsort 8.4.0
-    platformdirs 4.10.0
+    platformdirs 4.13.4
     pycountry 24.6.1
     PyYAML 6.0.3
     requests 2.33.1
-    wcwidth 0.8.2
+    wcwidth 0.9.2
 -->
 <link href="draft-tschofenig-emu-pqpake.xml" rel="alternate" type="application/rfc+xml">
 <link href="#copyright" rel="license">
@@ -68,7 +70,6 @@ requiring public-key certificates during normal authentication.
   src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-latin-ext.woff2') format('woff2');
   unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
-
 @font-face {
   font-family: 'Lora';
   font-style: italic;
@@ -117,7 +118,6 @@ requiring public-key certificates during normal authentication.
   src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-latin.woff2') format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
-
 @font-face {
   font-family: 'Lora';
   font-style: normal;
@@ -182,7 +182,6 @@ requiring public-key certificates during normal authentication.
   font-display: swap;
   src: local('Oxygen Mono'), local('OxygenMono-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/oxygenmono-regular-latin.woff2') format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
 }
 
 @font-face {
@@ -1051,11 +1050,11 @@ svg {
 <thead><tr>
 <td class="left">Internet-Draft</td>
 <td class="center">EAP-PQPAKE</td>
-<td class="right">July 2026</td>
+<td class="right">October 2026</td>
 </tr></thead>
 <tfoot><tr>
-<td class="left">Tschofenig</td>
-<td class="center">Expires 7 January 2027</td>
+<td class="left">Tschofenig, et al.</td>
+<td class="center">Expires 27 April 2027</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1068,17 +1067,25 @@ svg {
 <dd class="internet-draft">draft-tschofenig-emu-pqpake-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-07-06" class="published">6 July 2026</time>
+<time datetime="2026-10-24" class="published">24 October 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Experimental</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2027-01-07">7 January 2027</time></dd>
-<dt class="label-authors">Author:</dt>
+<dd class="expires"><time datetime="2027-04-27">27 April 2027</time></dd>
+<dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
       <div class="author-name">H. Tschofenig</div>
 <div class="org">UniBw M.</div>
+</div>
+<div class="author">
+      <div class="author-name">T. Reddy</div>
+<div class="org">Nokia</div>
+</div>
+<div class="author">
+      <div class="author-name">D. Harkins</div>
+<div class="org">Hewlett-Packard Enterprise</div>
 </div>
 </dd>
 </dl>
@@ -1127,7 +1134,7 @@ requiring public-key certificates during normal authentication.<a href="#section
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 7 January 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 27 April 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1224,7 +1231,7 @@ requiring public-key certificates during normal authentication.<a href="#section
             <p id="section-toc.1-1.12.1"><a href="#appendix-A" class="auto internal xref"></a><a href="#name-acknowledgments" class="internal xref">Acknowledgments</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.13">
-            <p id="section-toc.1-1.13.1"><a href="#appendix-B" class="auto internal xref"></a><a href="#name-authors-address" class="internal xref">Author's Address</a></p>
+            <p id="section-toc.1-1.13.1"><a href="#appendix-B" class="auto internal xref"></a><a href="#name-authors-addresses" class="internal xref">Authors' Addresses</a></p>
 </li>
         </ul>
 </nav>
@@ -1248,7 +1255,8 @@ classical assumptions fail.  This is undesirable for deployments where
 the confidentiality or integrity of subsequent traffic remains valuable
 after the authentication exchange has completed.<a href="#section-1-2" class="pilcrow">¶</a></p>
 <p id="section-1-3">This document specifies EAP-PQPAKE, an EAP method that encapsulates
-CPaceOQUAKE+ <span>[<a href="#I-D.vos-cfrg-pqpake" class="cite xref">I-D.vos-cfrg-pqpake</a>]</span>.  CPaceOQUAKE+ is a hybrid
+CPaceOQUAKE+ from Section 8.3 of <span>[<a href="#I-D.vos-cfrg-pqpake" class="cite xref">I-D.vos-cfrg-pqpake</a>]</span>, revision
+<code>draft-vos-cfrg-pqpake-03</code>.  CPaceOQUAKE+ is a hybrid
 asymmetric PAKE that combines a classical PAKE component with a
 post-quantum KEM-based component.  EAP-PQPAKE defines the EAP message
 flow, packet formats, method transcript, exported MSK and EMSK
@@ -1262,9 +1270,10 @@ contributes a post-quantum KEM-based PAKE component.<a href="#section-1-4" class
 CPaceOQUAKE+ password verifiers for the peer.  The registration
 procedure used to create those verifiers is specified by
 CPaceOQUAKE+ and is outside the EAP authentication exchange defined in
-this document.  Registration must be performed over a channel that
-authenticates the server and protects the verifier material from
-modification.<a href="#section-1-5" class="pilcrow">¶</a></p>
+this document.  The registered verifier consists of <code>(v, pk, kem_blind)</code>;
+the server also stores the salt, configuration, and registration
+identities.  Registration <span class="bcp14">MUST</span> authenticate the server and protect the
+confidentiality and integrity of the verifier material.<a href="#section-1-5" class="pilcrow">¶</a></p>
 <p id="section-1-6">Note: This document version is experimental and relies on a
 work in progress PAKE algorithm.<a href="#section-1-6" class="pilcrow">¶</a></p>
 </section>
@@ -1299,35 +1308,54 @@ the password after local password processing.<a href="#section-2-3.6.1" class="p
         <dd class="break"></dd>
 <dt id="section-2-3.7">U:</dt>
         <dd style="margin-left: 1.5em" id="section-2-3.8">
-          <p id="section-2-3.8.1">The peer identity input to CPaceOQUAKE+.<a href="#section-2-3.8.1" class="pilcrow">¶</a></p>
+          <p id="section-2-3.8.1">The peer identity used when registering the CPaceOQUAKE+ verifier.<a href="#section-2-3.8.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
 <dt id="section-2-3.9">S:</dt>
         <dd style="margin-left: 1.5em" id="section-2-3.10">
-          <p id="section-2-3.10.1">The server identity input to CPaceOQUAKE+.<a href="#section-2-3.10.1" class="pilcrow">¶</a></p>
+          <p id="section-2-3.10.1">The server identity used when registering the CPaceOQUAKE+ verifier.<a href="#section-2-3.10.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-3.11">Config:</dt>
+<dt id="section-2-3.11">kem_blind:</dt>
         <dd style="margin-left: 1.5em" id="section-2-3.12">
-          <p id="section-2-3.12.1">A registered set of CPaceOQUAKE+ algorithms and parameters.<a href="#section-2-3.12.1" class="pilcrow">¶</a></p>
+          <p id="section-2-3.12.1">A secret, random 32-octet part of the registered verifier.  It blinds
+password-derived KEM key generation and is sent to the peer only in
+encrypted form during password confirmation.<a href="#section-2-3.12.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-3.13">Method key:</dt>
+<dt id="section-2-3.13">public_context:</dt>
         <dd style="margin-left: 1.5em" id="section-2-3.14">
-          <p id="section-2-3.14.1">The 32-octet <code>client_key</code> or <code>server_key</code> output by the CPaceOQUAKE+
-password confirmation stage.  EAP-PQPAKE expands this value to the
-MSK and EMSK.<a href="#section-2-3.14.1" class="pilcrow">¶</a></p>
+          <p id="section-2-3.14.1">Public session information encoded with <code>EncodePublicContext</code> as
+specified in Appendix C.1 of <span>[<a href="#I-D.vos-cfrg-pqpake" class="cite xref">I-D.vos-cfrg-pqpake</a>]</span>.<a href="#section-2-3.14.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-3.15">uint8, uint16, uint32:</dt>
+<dt id="section-2-3.15">secret_context:</dt>
         <dd style="margin-left: 1.5em" id="section-2-3.16">
-          <p id="section-2-3.16.1">Unsigned integers encoded in network byte order.<a href="#section-2-3.16.1" class="pilcrow">¶</a></p>
+          <p id="section-2-3.16.1">Confidential context shared by the PAKE endpoints.  EAP-PQPAKE passes
+the empty octet string as this input to CPaceOQUAKE+.<a href="#section-2-3.16.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-3.17">opaque16:</dt>
+<dt id="section-2-3.17">Config:</dt>
         <dd style="margin-left: 1.5em" id="section-2-3.18">
-          <p id="section-2-3.18.1">A variable-length octet string encoded as a uint16 length followed by
-that many octets.<a href="#section-2-3.18.1" class="pilcrow">¶</a></p>
+          <p id="section-2-3.18.1">A registered set of CPaceOQUAKE+ algorithms and parameters.<a href="#section-2-3.18.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.19">Method key:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.20">
+          <p id="section-2-3.20.1">The 32-octet <code>client_key</code> or <code>server_key</code> output by the CPaceOQUAKE+
+password confirmation stage.  EAP-PQPAKE expands this value to the
+MSK and EMSK.<a href="#section-2-3.20.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.21">uint8, uint16, uint32:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.22">
+          <p id="section-2-3.22.1">Unsigned integers encoded in network byte order.<a href="#section-2-3.22.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.23">opaque16:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.24">
+          <p id="section-2-3.24.1">A variable-length octet string encoded as a uint16 length followed by
+that many octets.<a href="#section-2-3.24.1" class="pilcrow">¶</a></p>
 </dd>
       <dd class="break"></dd>
 </dl>
@@ -1340,9 +1368,10 @@ that many octets.<a href="#section-2-3.18.1" class="pilcrow">¶</a></p>
       </h2>
 <p id="section-3-1">EAP is a lock-step request/response protocol in which the EAP server
 sends each Request and the EAP peer sends the corresponding Response.
-CPaceOQUAKE+ is initiated by the client.  EAP-PQPAKE therefore uses an
-empty server request to solicit the first CPaceOQUAKE+ flight from the
-peer after identity and configuration negotiation have completed.<a href="#section-3-1" class="pilcrow">¶</a></p>
+CPaceOQUAKE+ is initiated by the client.  EAP-PQPAKE therefore uses a
+server request carrying the salt and a fresh nonce to solicit the first
+CPaceOQUAKE+ message from the peer after identity and configuration
+negotiation have completed.<a href="#section-3-1" class="pilcrow">¶</a></p>
 <p id="section-3-2">A successful EAP-PQPAKE exchange has the following shape:<a href="#section-3-2" class="pilcrow">¶</a></p>
 <div class="alignLeft art-ascii-art art-text artwork" id="section-3-3">
 <pre>
@@ -1356,18 +1385,19 @@ peer after identity and configuration negotiation have completed.<a href="#secti
 
                           EAP-PQPAKE-PAKE1/Request
                   &lt;---------------------------------
- EAP-PQPAKE-PAKE1/Response  (s1, msg1)
+ EAP-PQPAKE-PAKE1/Response  (msg1: Ya)
  ---------------------------------&gt;
 
                           EAP-PQPAKE-PAKE2/Request
-                          (s2, msg2, msg3)
+                          (msg2: Yb, s, T, rho)
                   &lt;---------------------------------
- EAP-PQPAKE-PAKE2/Response  (msg4)
+ EAP-PQPAKE-PAKE2/Response  (msg3: ct, h)
  ---------------------------------&gt;
 
-                          EAP-PQPAKE-Confirm/Request (chal)
+                          EAP-PQPAKE-Confirm/Request
+                          (msg4: enc_c, client_confirm)
                   &lt;---------------------------------
- EAP-PQPAKE-Confirm/Response  (resp)
+ EAP-PQPAKE-Confirm/Response  (msg5: server_confirm)
  ---------------------------------&gt;
 
                           EAP-Success
@@ -1376,11 +1406,11 @@ peer after identity and configuration negotiation have completed.<a href="#secti
 </div>
 <p id="section-3-4">The Start exchange negotiates one CPaceOQUAKE+ configuration and
 identifies the peer and server.  After receiving the peer identity, the
-server locates the stored verifier, password-confirmation KEM public
-key, and salt for that peer and selected configuration.  The PAKE1 and
-PAKE2 exchanges carry the three CPaceOQUAKE flights: <code>(s1, msg1)</code>,
-<code>(s2, msg2, msg3)</code>, and <code>msg4</code>.  The Confirm exchange carries the
-CPaceOQUAKE+ password confirmation messages <code>chal</code> and <code>resp</code>.<a href="#section-3-4" class="pilcrow">¶</a></p>
+server locates the stored <code>(v, pk, kem_blind)</code> and salt for that peer
+and selected configuration.  The PAKE1 and PAKE2 exchanges carry the
+first three CPaceOQUAKE+ messages.  The Confirm exchange carries the
+password confirmation challenge <code>msg4</code> and response <code>msg5</code>.  The field
+<code>rho</code> in the diagram denotes the public matrix seed of ML-BUA-sKEM.<a href="#section-3-4" class="pilcrow">¶</a></p>
 <p id="section-3-5">On success, both endpoints derive the EAP MSK and EMSK from the
 CPaceOQUAKE+ method key.  On failure, either endpoint can send an
 EAP-PQPAKE-Failure message.  The server terminates failed exchanges with
@@ -1392,8 +1422,10 @@ EAP-Failure.<a href="#section-3-5" class="pilcrow">¶</a></p>
       <h2 id="name-cpaceoquake-use">
 <a href="#section-4" class="section-number selfRef">4. </a><a href="#name-cpaceoquake-use" class="section-name selfRef">CPaceOQUAKE+ Use</a>
       </h2>
-<p id="section-4-1">EAP-PQPAKE uses CPaceOQUAKE+ as specified in <span>[<a href="#I-D.vos-cfrg-pqpake" class="cite xref">I-D.vos-cfrg-pqpake</a>]</span>,
-with the following mapping.<a href="#section-4-1" class="pilcrow">¶</a></p>
+<p id="section-4-1">EAP-PQPAKE uses the six CPaceOQUAKE+ functions in Section 8.3 of
+<span>[<a href="#I-D.vos-cfrg-pqpake" class="cite xref">I-D.vos-cfrg-pqpake</a>]</span>.  The peer calls <code>Init</code>, <code>InitiatorContinue</code>,
+and <code>InitiatorFinish</code>; the server calls <code>Respond</code>, <code>ResponderContinue</code>,
+and <code>ResponderFinish</code>.<a href="#section-4-1" class="pilcrow">¶</a></p>
 <p id="section-4-2">The CPaceOQUAKE+ messages carried by this method are opaque to
 EAP-PQPAKE.  Implementations that implement CPaceOQUAKE+ directly, rather
 than using a CPaceOQUAKE+ library interface, <span class="bcp14">MUST</span> follow the selected
@@ -1405,46 +1437,71 @@ to the ML-BUA-sKEM public-key material, and <span class="bcp14">MUST NOT</span> 
 ciphertexts unless the selected CPaceOQUAKE+ configuration explicitly
 requires it.<a href="#section-4-2" class="pilcrow">¶</a></p>
 <p id="section-4-3">The peer computes the CPaceOQUAKE+ verifier material <code>(v, seed)</code> from
-PRS, salt, U, and S using <code>GenVerifierMaterial</code>.  The server stores the
-salt, verifier <code>v</code>, and password-confirmation KEM public key <code>pk</code> for
-the peer.  The server <span class="bcp14">MUST NOT</span> store the seed that CPaceOQUAKE+ derives
-from the password.<a href="#section-4-3" class="pilcrow">¶</a></p>
-<p id="section-4-4">The CPaceOQUAKE+ session identifier <code>sid</code> is:<a href="#section-4-4" class="pilcrow">¶</a></p>
+PRS, salt, U, and S using <code>GenVerifierMaterial</code>.  At registration,
+<code>GenVerifier</code> creates <code>(v, pk, kem_blind)</code>: it samples a fresh
+<code>kem_blind</code> and derives the KEM key pair from
+<code>DeriveKEMSeed(seed, kem_blind)</code>.  The server <span class="bcp14">MUST</span> store <code>v</code>, <code>pk</code>,
+<code>kem_blind</code>, the 32-octet salt, the configuration, and the registration
+identities.  It <span class="bcp14">MUST NOT</span> store <code>seed</code> or the corresponding KEM secret
+key.  The server <span class="bcp14">MUST NOT</span> disclose <code>kem_blind</code> in the Start or PAKE1
+exchange; CPaceOQUAKE+ carries it only inside the encrypted password
+confirmation challenge.<a href="#section-4-3" class="pilcrow">¶</a></p>
+<p id="section-4-4">The EAP-PQPAKE session identifier <code>sid</code> and CPaceOQUAKE+ contexts are:<a href="#section-4-4" class="pilcrow">¶</a></p>
 <div class="lang-pseudocode sourcecode" id="section-4-5">
 <pre>
 sid = H("EAP-PQPAKE sid" ||
-        start_request_payload ||
-        start_response_payload ||
-        pake1_request_payload)
+        lv_encode(start_request_payload) ||
+        lv_encode(start_response_payload) ||
+        lv_encode(pake1_request_payload))
+public_context = EncodePublicContext(sid, U, S)
+secret_context = b""
 </pre><a href="#section-4-5" class="pilcrow">¶</a>
 </div>
-<p id="section-4-6">where <code>H</code> is the hash function selected by the EAP-PQPAKE configuration.
-The peer identity U is the Identity field from the Start/Response.  The
-server identity S is the Identity field from the Start/Request.  Both
-identities are the exact encoded octet strings sent on the wire, not a
-display-normalized form.<a href="#section-4-6" class="pilcrow">¶</a></p>
-<p id="section-4-7">The CPaceOQUAKE+ password-confirmation transcript <code>tx</code> is:<a href="#section-4-7" class="pilcrow">¶</a></p>
-<div class="lang-pseudocode sourcecode" id="section-4-8">
-<pre>
-tx = H("EAP-PQPAKE transcript" ||
-       start_request_payload ||
-       start_response_payload ||
-       pake1_request_payload ||
-       pake1_response_payload ||
-       pake2_request_payload ||
-       pake2_response_payload)
-</pre><a href="#section-4-8" class="pilcrow">¶</a>
-</div>
-<p id="section-4-9">The hash input includes the complete EAP-PQPAKE payloads, excluding EAP
-Code, Identifier, Length, Type, fragmentation flags, Total-Length, and
-fragmentation acknowledgements.  This binds the selected configuration,
-identities, salt, server nonce, and all CPaceOQUAKE messages into the
-password confirmation stage.  This value is used as the <code>transcript</code>
-input to the CPaceOQUAKE+ <code>PC-Challenge</code> and <code>PC-Response</code> functions.<a href="#section-4-9" class="pilcrow">¶</a></p>
-<p id="section-4-10">An implementation <span class="bcp14">MUST</span> abort the exchange if any CPaceOQUAKE+ operation
-raises an authentication error, if a received cryptographic message is
-not valid for the selected configuration, or if the selected
-configuration does not match one offered by the server.<a href="#section-4-10" class="pilcrow">¶</a></p>
+<p id="section-4-6">Here <code>H</code> is the EAP hash selected by the configuration and <code>lv_encode</code>
+is the two-octet length-prefix encoding defined in
+<span>[<a href="#I-D.vos-cfrg-pqpake" class="cite xref">I-D.vos-cfrg-pqpake</a>]</span>.  Each <code>_payload</code> value is the complete
+exchange-specific payload after reassembly, including its field length
+prefixes.  It excludes the EAP header, Flags, PQPAKE-Exch, Total-Length,
+and fragmentation acknowledgements.  Quoted labels are ASCII octets
+without a terminating zero.<a href="#section-4-6" class="pilcrow">¶</a></p>
+<p id="section-4-7">U is the Peer-ID value from Start/Response, excluding its type and
+length; S is the Server-ID value from Start/Request, excluding its type
+and length.  These <span class="bcp14">MUST</span> be the exact octet strings used for verifier
+registration.  A peer <span class="bcp14">MUST</span> check S against its configured registration
+before starting the PAKE.  Implementations <span class="bcp14">MUST NOT</span> normalize these
+octet strings during the exchange.  Changing either registration
+identity requires reprovisioning.  The identity types and their wire
+encodings are also bound through <code>sid</code>.<a href="#section-4-7" class="pilcrow">¶</a></p>
+<p id="section-4-8"><code>EncodePublicContext</code> <span class="bcp14">MUST</span> use the four-octet, big-endian length
+prefixes from Appendix C.1 of <span>[<a href="#I-D.vos-cfrg-pqpake" class="cite xref">I-D.vos-cfrg-pqpake</a>]</span>.  Both endpoints
+pass the resulting <code>public_context</code> and the empty <code>secret_context</code> to
+their initial CPaceOQUAKE+ call.  CPaceOQUAKE internally supplies the
+first stage's key and transcript hash as the contexts for OQUAKE.<a href="#section-4-8" class="pilcrow">¶</a></p>
+<p id="section-4-9">The CPaceOQUAKE+ functions compute their own transcript hash <code>th</code>.
+Password confirmation uses the <code>SK</code> and <code>th</code> output by the symmetric
+CPaceOQUAKE stage: <code>PC.Challenge(SK, th, pk, kem_blind)</code> and
+<code>PC.Respond(SK, th, seed, challenge)</code>.  Implementations <span class="bcp14">MUST</span> preserve
+these inputs exactly; they <span class="bcp14">MUST NOT</span> substitute an EAP-specific
+transcript hash for <code>th</code>.  The initial public context binds the EAP
+configuration negotiation, identities, salt, and server nonce, while
+the internal transcript hashes bind the subsequent PAKE messages.
+The final <code>th</code> is returned with <code>client_key</code> or <code>server_key</code> after
+successful password confirmation.<a href="#section-4-9" class="pilcrow">¶</a></p>
+<p id="section-4-10">The intermediate <code>SK</code> <span class="bcp14">MUST NOT</span> be used for EAP key export.  The server
+<span class="bcp14">MUST NOT</span> release or use the candidate key held in the state returned
+by <code>ResponderContinue</code> until <code>ResponderFinish</code> succeeds.  The peer
+obtains its method key only after <code>InitiatorFinish</code> verifies the
+server's password confirmation value.<a href="#section-4-10" class="pilcrow">¶</a></p>
+<p id="section-4-11">An implementation <span class="bcp14">MUST</span> abort the exchange if a CPaceOQUAKE+ operation
+raises <code>AuthenticationError</code>, <code>CPaceError</code>, or another surfaced
+cryptographic failure, if a received message has incorrect length or
+framing for the selected configuration, or if the selected configuration
+does not match one offered by the server.<a href="#section-4-11" class="pilcrow">¶</a></p>
+<p id="section-4-12">OQUAKE's implicit rejection and random-key behavior <span class="bcp14">MUST</span> be preserved.
+An implementation <span class="bcp14">MUST NOT</span> expose a distinguishable error for an
+OQUAKE confirmation mismatch that the underlying protocol handles by
+returning an unrelated key.  Such a mismatch is detected during the
+subsequent password confirmation exchange.<a href="#section-4-12" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="configurations">
@@ -1456,26 +1513,89 @@ configuration does not match one offered by the server.<a href="#section-4-10" c
 needed by CPaceOQUAKE+ and the EAP exporter.  This document defines one
 mandatory-to-implement configuration:<a href="#section-5-1" class="pilcrow">¶</a></p>
 <span class="break"></span><dl class="dlParallel" id="section-5-2">
-        <dt id="section-5-2.1">PQPAKE-XWING-MLBUASKEM1024-CPACE-RISTRETTO255-HKDFSHA256-ARGON2ID:</dt>
+        <dt id="section-5-2.1">
+<code>cpaceoquakeplus-x25519-mlbuaskem1024-xwing</code>:</dt>
         <dd style="margin-left: 1.5em" id="section-5-2.2">
-          <p id="section-5-2.2.1">This configuration uses the recommended CPaceOQUAKE+ configuration
-from <span>[<a href="#I-D.vos-cfrg-pqpake" class="cite xref">I-D.vos-cfrg-pqpake</a>]</span>: CPACE-RISTR255-SHA512, X-Wing for the
-password-confirmation KEM, HKDF-SHA-256 for the
-password-confirmation KDF, Argon2id <span>[<a href="#RFC9106" class="cite xref">RFC9106</a>]</span> with the parameters
-specified by CPaceOQUAKE+, ML-BUA-sKEM1024 for OQUAKE, HKDF-SHA-256
-for the PAKE KDF, SHA-256 as the general-purpose hash, and the
-CPaceOQUAKE+ recommended domain separation tag.  The ML-BUA-sKEM1024
-OQUAKE parameters, including Kemeleon security parameter and public-key
-and ciphertext lengths, are those specified by CPaceOQUAKE+ for this
-configuration.<a href="#section-5-2.2.1" class="pilcrow">¶</a></p>
+          <p id="section-5-2.2.1">The preferred configuration in Section 9.5.1 of
+<span>[<a href="#I-D.vos-cfrg-pqpake" class="cite xref">I-D.vos-cfrg-pqpake</a>]</span>, with the common parameters from Section 9.1.<a href="#section-5-2.2.1" class="pilcrow">¶</a></p>
 </dd>
       <dd class="break"></dd>
 </dl>
-<p id="section-5-3">Implementations conforming to this document <span class="bcp14">MUST</span> implement this
+<table class="center" id="table-1">
+        <caption><a href="#table-1" class="selfRef">Table 1</a></caption>
+<thead>
+          <tr>
+            <th class="text-left" rowspan="1" colspan="1">Component</th>
+            <th class="text-left" rowspan="1" colspan="1">Algorithm or parameter</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">CPace group</td>
+            <td class="text-left" rowspan="1" colspan="1">CPACE-X25519-SHA512</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">CPace hash</td>
+            <td class="text-left" rowspan="1" colspan="1">SHA-512</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">OQUAKE BUA-sKEM</td>
+            <td class="text-left" rowspan="1" colspan="1">ML-BUA-sKEM-1024</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">PAKE-KDF</td>
+            <td class="text-left" rowspan="1" colspan="1">HKDF-SHA-256</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">Password-confirmation KEM</td>
+            <td class="text-left" rowspan="1" colspan="1">X-Wing</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">PC-KDF</td>
+            <td class="text-left" rowspan="1" colspan="1">HKDF-SHA-256</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">PC-KSF</td>
+            <td class="text-left" rowspan="1" colspan="1">scrypt(N = 32768, r = 8, p = 1)</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">Common parameters</td>
+            <td class="text-left" rowspan="1" colspan="1">Nv = 32, Nkc = 32, Nr = 64, Nkey = 32</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">EAP hash H and HKDF hash</td>
+            <td class="text-left" rowspan="1" colspan="1">SHA-256</td>
+          </tr>
+        </tbody>
+      </table>
+<p id="section-5-4">The scrypt function is specified in <span>[<a href="#RFC7914" class="cite xref">RFC7914</a>]</span>.  For ML-BUA-sKEM-1024,
+Kemeleon.t is 132, Npk is 1596, Nt is 1564, the public matrix seed is
+32 octets, and Nct is 1568.  For the X-Wing password-confirmation KEM,
+Nseed is 32, Npk is 1216, and Nct is 1120.  This configuration requires
+both ML-KEM-1024 for OQUAKE and ML-KEM-768 as used by X-Wing.<a href="#section-5-4" class="pilcrow">¶</a></p>
+<p id="section-5-5">The domain separation tag is the following 32-octet value, shown in
+hexadecimal:<a href="#section-5-5" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-5-6">
+<pre>
+7de162c387ba1bad9c790e7e56bd245d6753d045185cbc3972eba34ddac1a9db
+</pre><a href="#section-5-6" class="pilcrow">¶</a>
+</div>
+<p id="section-5-7">This CPaceOQUAKE+ DST <span class="bcp14">MUST</span> be used throughout CPace, OQUAKE, transcript
+hashing, verifier generation, and password confirmation.  It <span class="bcp14">MUST NOT</span>
+be combined with the DST values of standalone CPaceOQUAKE or OQUAKE
+configurations.<a href="#section-5-7" class="pilcrow">¶</a></p>
+<p id="section-5-8">Implementations conforming to this document <span class="bcp14">MUST</span> implement this
 configuration.  Other configurations <span class="bcp14">MAY</span> be registered as described in
 <a href="#iana" class="auto internal xref">Section 10</a>.  New configurations <span class="bcp14">MUST</span> specify the complete CPaceOQUAKE+
-parameter set and <span class="bcp14">MUST</span> use a hybrid KEM for the password-confirmation
-KEM, as required by CPaceOQUAKE+.<a href="#section-5-3" class="pilcrow">¶</a></p>
+parameter set, satisfy Section 9.6 of <span>[<a href="#I-D.vos-cfrg-pqpake" class="cite xref">I-D.vos-cfrg-pqpake</a>]</span>, and use
+a hybrid KEM for password confirmation.  They <span class="bcp14">MUST</span> also specify the EAP
+hash and the HKDF hash used by <a href="#key-derivation" class="auto internal xref">Section 8</a>.<a href="#section-5-8" class="pilcrow">¶</a></p>
+<p id="section-5-9">This configuration and the <code>-03</code> message formats are incompatible with
+the Ristretto255/Argon2id configuration and encodings in earlier
+versions of this EAP draft.  Deployments using those versions <span class="bcp14">MUST</span>
+reprovision verifiers with <code>GenVerifier</code> from the referenced revision,
+including a fresh <code>kem_blind</code>.  The old verifier material <span class="bcp14">MUST NOT</span> be
+reinterpreted as a registration for this configuration.<a href="#section-5-9" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="packet-format">
@@ -1528,8 +1648,8 @@ message follow.<a href="#section-6-6.4.1" class="pilcrow">¶</a></p>
       <dd class="break"></dd>
 </dl>
 <p id="section-6-7">PQPAKE-Exch identifies the exchange payload:<a href="#section-6-7" class="pilcrow">¶</a></p>
-<table class="center" id="table-1">
-        <caption><a href="#table-1" class="selfRef">Table 1</a></caption>
+<table class="center" id="table-2">
+        <caption><a href="#table-2" class="selfRef">Table 2</a></caption>
 <thead>
           <tr>
             <th class="text-right" rowspan="1" colspan="1">Value</th>
@@ -1591,8 +1711,8 @@ payload.<a href="#section-6-11" class="pilcrow">¶</a></p>
         </h3>
 <p id="section-6.1-1">Identity Type is a one-octet field.  This document defines the following
 values:<a href="#section-6.1-1" class="pilcrow">¶</a></p>
-<table class="center" id="table-2">
-          <caption><a href="#table-2" class="selfRef">Table 2</a></caption>
+<table class="center" id="table-3">
+          <caption><a href="#table-3" class="selfRef">Table 3</a></caption>
 <thead>
             <tr>
               <th class="text-right" rowspan="1" colspan="1">Value</th>
@@ -1674,7 +1794,7 @@ receiver.  Server-ID is an opaque16 field preceded by Server-IDType.<a href="#se
 <p id="section-6.2-6">Selected-Config <span class="bcp14">MUST</span> be one of the Config-ID values in the
 Start/Request.  Peer-ID is an opaque16 field preceded by Peer-IDType.
 The server uses Selected-Config and Peer-ID to locate the peer's stored
-salt, verifier, and password-confirmation KEM public key.<a href="#section-6.2-6" class="pilcrow">¶</a></p>
+salt and verifier <code>(v, pk, kem_blind)</code> for its Server-ID.<a href="#section-6.2-6" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="cpaceoquake-message-mapping">
@@ -1683,11 +1803,13 @@ salt, verifier, and password-confirmation KEM public key.<a href="#section-6.2-6
 <a href="#section-6.3" class="section-number selfRef">6.3. </a><a href="#name-cpaceoquake-message-mapping" class="section-name selfRef">CPaceOQUAKE+ Message Mapping</a>
         </h3>
 <p id="section-6.3-1">EAP-PQPAKE carries the five CPaceOQUAKE+ protocol messages as EAP
-payload fields.  The first three fields carry the encoded messages of
-the CPaceOQUAKE subprotocol inside CPaceOQUAKE+.  The EAP exchanges map
-to the CPaceOQUAKE+ functions in <span>[<a href="#I-D.vos-cfrg-pqpake" class="cite xref">I-D.vos-cfrg-pqpake</a>]</span> as follows:<a href="#section-6.3-1" class="pilcrow">¶</a></p>
-<table class="center" id="table-3">
-          <caption><a href="#table-3" class="selfRef">Table 3</a></caption>
+payload fields.  Each field contains the complete serialized message
+specified in Appendix C.5 of <span>[<a href="#I-D.vos-cfrg-pqpake" class="cite xref">I-D.vos-cfrg-pqpake</a>]</span>, inside an EAP
+<code>opaque16</code> field.  This outer length prefix is additional to any length
+prefix inside the serialized message.  The EAP exchanges map to the
+CPaceOQUAKE+ functions as follows:<a href="#section-6.3-1" class="pilcrow">¶</a></p>
+<table class="center" id="table-4">
+          <caption><a href="#table-4" class="selfRef">Table 4</a></caption>
 <thead>
             <tr>
               <th class="text-left" rowspan="1" colspan="1">EAP-PQPAKE field</th>
@@ -1700,56 +1822,66 @@ to the CPaceOQUAKE+ functions in <span>[<a href="#I-D.vos-cfrg-pqpake" class="ci
               <td class="text-left" rowspan="1" colspan="1">CPaceOQUAKE-msg1</td>
               <td class="text-left" rowspan="1" colspan="1">peer</td>
               <td class="text-left" rowspan="1" colspan="1">
-                <code>(s1, msg1)</code> from <code>CPaceOQUAKE.Init</code>
+                <code>msg1</code> from <code>CPaceOQUAKE+.Init</code>
 </td>
             </tr>
             <tr>
               <td class="text-left" rowspan="1" colspan="1">CPaceOQUAKE-msg2</td>
               <td class="text-left" rowspan="1" colspan="1">server</td>
               <td class="text-left" rowspan="1" colspan="1">
-                <code>(s2, msg2, msg3)</code> from <code>CPaceOQUAKE.Respond</code>
+                <code>msg2</code> from <code>CPaceOQUAKE+.Respond</code>
 </td>
             </tr>
             <tr>
               <td class="text-left" rowspan="1" colspan="1">CPaceOQUAKE-msg3</td>
               <td class="text-left" rowspan="1" colspan="1">peer</td>
               <td class="text-left" rowspan="1" colspan="1">
-                <code>msg4</code> from <code>CPaceOQUAKE.InitiatorFinish</code>
+                <code>msg3</code> from <code>CPaceOQUAKE+.InitiatorContinue</code>
 </td>
             </tr>
             <tr>
               <td class="text-left" rowspan="1" colspan="1">PC-Challenge</td>
               <td class="text-left" rowspan="1" colspan="1">server</td>
               <td class="text-left" rowspan="1" colspan="1">
-                <code>challenge</code> from <code>PC-Challenge</code>
+                <code>msg4</code> from <code>CPaceOQUAKE+.ResponderContinue</code>
 </td>
             </tr>
             <tr>
               <td class="text-left" rowspan="1" colspan="1">PC-Response</td>
               <td class="text-left" rowspan="1" colspan="1">peer</td>
               <td class="text-left" rowspan="1" colspan="1">
-                <code>response</code> from <code>PC-Response</code>
+                <code>msg5</code> from <code>CPaceOQUAKE+.InitiatorFinish</code>
 </td>
             </tr>
           </tbody>
         </table>
-<p id="section-6.3-3">Here, <code>v</code> is the CPaceOQUAKE+ verifier for the selected peer and
-configuration.  The peer computes <code>v</code> and <code>seed</code> from PRS, salt, U, and
-S using <code>GenVerifierMaterial</code>; the server uses the stored <code>v</code> and
-password-confirmation KEM public key <code>pk</code> for the peer.  <code>pk</code> is
-generated during CPaceOQUAKE+ registration.  <code>SK</code> is the symmetric key
-output by the CPaceOQUAKE phase before password confirmation, and <code>tx</code>
-is the EAP-PQPAKE password-confirmation transcript defined in
-<a href="#cpaceoquake-use" class="auto internal xref">Section 4</a>.<a href="#section-6.3-3" class="pilcrow">¶</a></p>
-<p id="section-6.3-4">The tuple notation in this table follows the CPaceOQUAKE flow in
-<span>[<a href="#I-D.vos-cfrg-pqpake" class="cite xref">I-D.vos-cfrg-pqpake</a>]</span>.  On the wire, CPaceOQUAKE-msg1 is the encoded
-<code>init_msg</code> returned by <code>CPaceOQUAKE.Init</code>, consisting of <code>s1</code> followed
-by <code>lv_encode(msg1)</code>.  CPaceOQUAKE-msg2 is the encoded <code>resp_msg</code>
-returned by <code>CPaceOQUAKE.Respond</code>, consisting of <code>s2</code> followed by
-<code>lv_encode(msg2)</code> and <code>lv_encode(msg3)</code>.  CPaceOQUAKE-msg3 is the
-<code>msg4</code> returned by <code>CPaceOQUAKE.InitiatorFinish</code>.  <code>PC-Challenge</code> is
-invoked with <code>SK</code>, <code>tx</code>, <code>pk</code>, <code>sid</code>, U, and S.  <code>PC-Response</code> is
-invoked with <code>SK</code>, <code>tx</code>, <code>seed</code>, <code>challenge</code>, <code>sid</code>, U, and S.<a href="#section-6.3-4" class="pilcrow">¶</a></p>
+<p id="section-6.3-3">The following sequence uses the contexts and registration values from
+<a href="#cpaceoquake-use" class="auto internal xref">Section 4</a>.  Each returned state replaces the endpoint's
+previous state.  Serialization and parsing use Appendix C.5 of
+<span>[<a href="#I-D.vos-cfrg-pqpake" class="cite xref">I-D.vos-cfrg-pqpake</a>]</span> at the EAP payload boundary.<a href="#section-6.3-3" class="pilcrow">¶</a></p>
+<div class="lang-pseudocode sourcecode" id="section-6.3-4">
+<pre>
+peer_state, msg1 = CPaceOQUAKE+.Init(
+    PRS, salt, U, S, public_context, secret_context)
+server_state, msg2 = CPaceOQUAKE+.Respond(
+    v, public_context, secret_context, msg1)
+peer_state, msg3 = CPaceOQUAKE+.InitiatorContinue(
+    peer_state, msg2)
+server_state, msg4 = CPaceOQUAKE+.ResponderContinue(
+    server_state, msg3, pk, kem_blind)
+client_key, msg5, th = CPaceOQUAKE+.InitiatorFinish(
+    peer_state, msg4)
+server_key, th = CPaceOQUAKE+.ResponderFinish(server_state, msg5)
+</pre><a href="#section-6.3-4" class="pilcrow">¶</a>
+</div>
+<p id="section-6.3-5">Before invoking a function that consumes a message, the receiver <span class="bcp14">MUST</span>
+have reassembled the complete EAP payload and checked all field lengths
+and framing.  Missing, duplicated, or additional fields <span class="bcp14">MUST</span> cause the
+exchange to abort.  EAP fragmentation <span class="bcp14">MUST NOT</span> change field values,
+message direction, or processing order, as required by Appendix D of
+<span>[<a href="#I-D.vos-cfrg-pqpake" class="cite xref">I-D.vos-cfrg-pqpake</a>]</span>.  Retransmissions <span class="bcp14">MUST</span> reuse the original
+encoded messages and cached EAP Responses; they <span class="bcp14">MUST NOT</span> cause a
+CPaceOQUAKE+ operation to run again on the same state.<a href="#section-6.3-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="pake1-payloads">
@@ -1770,8 +1902,8 @@ invoked with <code>SK</code>, <code>tx</code>, <code>seed</code>, <code>challeng
 </pre><a href="#section-6.4-2" class="pilcrow">¶</a>
 </div>
 <p id="section-6.4-3">Server-Nonce is an opaque16 field containing at least 32 octets of
-fresh random data generated by the server.  Salt is the opaque16 salt
-stored for the selected peer and configuration.<a href="#section-6.4-3" class="pilcrow">¶</a></p>
+fresh random data generated by the server.  Salt is an opaque16 field
+containing the 32-octet salt stored for the selected registration.<a href="#section-6.4-3" class="pilcrow">¶</a></p>
 <p id="section-6.4-4">The PAKE1/Response payload is sent by the peer:<a href="#section-6.4-4" class="pilcrow">¶</a></p>
 <div class="alignLeft art-ascii-art art-text artwork" id="section-6.4-5">
 <pre>
@@ -1781,9 +1913,10 @@ stored for the selected peer and configuration.<a href="#section-6.4-3" class="p
 </pre><a href="#section-6.4-5" class="pilcrow">¶</a>
 </div>
 <p id="section-6.4-6">CPaceOQUAKE-msg1 is an opaque16 field containing the first
-CPaceOQUAKE+ message.  It is the encoded <code>init_msg</code> returned by
-<code>CPaceOQUAKE.Init</code>, corresponding to <code>(s1, msg1)</code> in
-<span>[<a href="#I-D.vos-cfrg-pqpake" class="cite xref">I-D.vos-cfrg-pqpake</a>]</span>.<a href="#section-6.4-6" class="pilcrow">¶</a></p>
+CPaceOQUAKE+ message <code>msg1</code>, returned by <code>CPaceOQUAKE+.Init</code>.
+Its contents are <code>lv_encode(Ya)</code>, where <code>Ya</code> is the CPace initiator
+message.  The internal <code>lv_encode</code> prefix <span class="bcp14">MUST</span> be retained inside the
+EAP opaque16 field.<a href="#section-6.4-6" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="pake2-payloads">
@@ -1808,10 +1941,12 @@ CPaceOQUAKE+ message.  It is the encoded <code>init_msg</code> returned by
 </pre><a href="#section-6.5-4" class="pilcrow">¶</a>
 </div>
 <p id="section-6.5-5">Both fields are encoded as opaque16 values.<a href="#section-6.5-5" class="pilcrow">¶</a></p>
-<p id="section-6.5-6">CPaceOQUAKE-msg2 is the encoded <code>resp_msg</code> returned by
-<code>CPaceOQUAKE.Respond</code>, corresponding to <code>(s2, msg2, msg3)</code> in
-<span>[<a href="#I-D.vos-cfrg-pqpake" class="cite xref">I-D.vos-cfrg-pqpake</a>]</span>.  CPaceOQUAKE-msg3 is the <code>msg4</code> returned by
-<code>CPaceOQUAKE.InitiatorFinish</code>.<a href="#section-6.5-6" class="pilcrow">¶</a></p>
+<p id="section-6.5-6">CPaceOQUAKE-msg2 contains <code>msg2</code> from <code>CPaceOQUAKE+.Respond</code>, encoded
+as <code>lv_encode(Yb) || s || T || rho</code>.  <code>Yb</code> is the CPace responder
+message; <code>(s, T, rho)</code> is the OQUAKE initiator message.  CPaceOQUAKE-msg3
+contains <code>msg3</code> from <code>CPaceOQUAKE+.InitiatorContinue</code>, encoded as
+<code>ct || h</code>, the OQUAKE responder message.  The lengths of <code>s</code>, <code>T</code>,
+<code>rho</code>, <code>ct</code>, and <code>h</code> are determined by the selected configuration.<a href="#section-6.5-6" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="confirm-payloads">
@@ -1835,9 +1970,48 @@ CPaceOQUAKE+ message.  It is the encoded <code>init_msg</code> returned by
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 </pre><a href="#section-6.6-4" class="pilcrow">¶</a>
 </div>
-<p id="section-6.6-5">Both fields are encoded as opaque16 values.  PC-Challenge is the
-challenge output by CPaceOQUAKE+ <code>PC-Challenge</code>.  PC-Response is the
-response output by CPaceOQUAKE+ <code>PC-Response</code>.<a href="#section-6.6-5" class="pilcrow">¶</a></p>
+<p id="section-6.6-5">Both fields are encoded as opaque16 values.  PC-Challenge contains
+<code>msg4</code> from <code>CPaceOQUAKE+.ResponderContinue</code>, encoded as
+<code>enc_c || client_confirm</code>.  <code>enc_c</code> encrypts the password-confirmation
+KEM ciphertext together with <code>kem_blind</code>; its length is the
+password-confirmation KEM's Nct plus 32 octets.  <code>client_confirm</code> has
+Nkc octets.  PC-Response contains <code>msg5</code> from
+<code>CPaceOQUAKE+.InitiatorFinish</code>, which is the Nkc-octet
+<code>server_confirm</code>.  The confirmation names follow the underlying PAKE:
+the server sends <code>client_confirm</code> and the peer sends <code>server_confirm</code>.<a href="#section-6.6-5" class="pilcrow">¶</a></p>
+<p id="section-6.6-6">For the mandatory configuration, the serialized messages have the
+following lengths, excluding the EAP opaque16 prefix and packet header:<a href="#section-6.6-6" class="pilcrow">¶</a></p>
+<table class="center" id="table-5">
+          <caption><a href="#table-5" class="selfRef">Table 5</a></caption>
+<thead>
+            <tr>
+              <th class="text-left" rowspan="1" colspan="1">Message</th>
+              <th class="text-right" rowspan="1" colspan="1">Length in octets</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">CPaceOQUAKE-msg1</td>
+              <td class="text-right" rowspan="1" colspan="1">34</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">CPaceOQUAKE-msg2</td>
+              <td class="text-right" rowspan="1" colspan="1">1694</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">CPaceOQUAKE-msg3</td>
+              <td class="text-right" rowspan="1" colspan="1">1600</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">PC-Challenge</td>
+              <td class="text-right" rowspan="1" colspan="1">1184</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">PC-Response</td>
+              <td class="text-right" rowspan="1" colspan="1">32</td>
+            </tr>
+          </tbody>
+        </table>
 </section>
 </div>
 <div id="failure-payload">
@@ -1846,8 +2020,8 @@ response output by CPaceOQUAKE+ <code>PC-Response</code>.<a href="#section-6.6-5
 <a href="#section-6.7" class="section-number selfRef">6.7. </a><a href="#name-failure-payload" class="section-name selfRef">Failure Payload</a>
         </h3>
 <p id="section-6.7-1">The Failure payload is a uint32 Failure-Code:<a href="#section-6.7-1" class="pilcrow">¶</a></p>
-<table class="center" id="table-4">
-          <caption><a href="#table-4" class="selfRef">Table 4</a></caption>
+<table class="center" id="table-6">
+          <caption><a href="#table-6" class="selfRef">Table 6</a></caption>
 <thead>
             <tr>
               <th class="text-right" rowspan="1" colspan="1">Value</th>
@@ -1949,42 +2123,44 @@ policy limit.<a href="#section-7-5" class="pilcrow">¶</a></p>
       <h2 id="name-key-derivation">
 <a href="#section-8" class="section-number selfRef">8. </a><a href="#name-key-derivation" class="section-name selfRef">Key Derivation</a>
       </h2>
-<p id="section-8-1">After successful processing of Confirm/Response, both endpoints have the
-same CPaceOQUAKE+ method key.  EAP-PQPAKE exports MSK and EMSK as
-required by <span>[<a href="#RFC3748" class="cite xref">RFC3748</a>]</span> and <span>[<a href="#RFC5247" class="cite xref">RFC5247</a>]</span>.<a href="#section-8-1" class="pilcrow">¶</a></p>
+<p id="section-8-1">The peer obtains <code>client_key</code> and the final transcript hash <code>th</code> from
+<code>CPaceOQUAKE+.InitiatorFinish</code> after verifying Confirm/Request.  The
+server obtains the matching <code>server_key</code> and <code>th</code> from
+<code>CPaceOQUAKE+.ResponderFinish</code> after verifying Confirm/Response.  These
+keys are the method key used below.  No intermediate PAKE key or
+unverified candidate key may be exported.  EAP-PQPAKE exports MSK and
+EMSK as required by <span>[<a href="#RFC3748" class="cite xref">RFC3748</a>]</span> and <span>[<a href="#RFC5247" class="cite xref">RFC5247</a>]</span>.<a href="#section-8-1" class="pilcrow">¶</a></p>
 <p id="section-8-2">The Method-ID is:<a href="#section-8-2" class="pilcrow">¶</a></p>
 <div class="lang-pseudocode sourcecode" id="section-8-3">
 <pre>
 Method-ID = H("EAP-PQPAKE Method-ID" ||
-              selected_config ||
-              start_request_payload ||
-              start_response_payload ||
-              pake1_request_payload ||
-              pake1_response_payload ||
-              pake2_request_payload ||
-              pake2_response_payload ||
-              confirm_request_payload ||
-              confirm_response_payload)
+              uint16(Selected-Config) || lv_encode(th))
 </pre><a href="#section-8-3" class="pilcrow">¶</a>
 </div>
-<p id="section-8-4">The Session-ID is:<a href="#section-8-4" class="pilcrow">¶</a></p>
-<div class="lang-pseudocode sourcecode" id="section-8-5">
+<p id="section-8-4"><code>th</code> is the final CPaceOQUAKE+ transcript hash, which binds the
+initial EAP public context and all five protocol messages, including
+both password confirmation values.  It <span class="bcp14">MUST NOT</span> be replaced by the
+transcript hash of an intermediate PAKE stage.  <code>Selected-Config</code> is
+encoded as the two-octet value selected in Start/Response.<a href="#section-8-4" class="pilcrow">¶</a></p>
+<p id="section-8-5">The Session-ID is:<a href="#section-8-5" class="pilcrow">¶</a></p>
+<div class="lang-pseudocode sourcecode" id="section-8-6">
 <pre>
 Session-ID = EAP-Type-Code || Method-ID
-</pre><a href="#section-8-5" class="pilcrow">¶</a>
+</pre><a href="#section-8-6" class="pilcrow">¶</a>
 </div>
-<p id="section-8-6">where EAP-Type-Code is the single-octet EAP method type assigned by
-IANA for EAP-PQPAKE.<a href="#section-8-6" class="pilcrow">¶</a></p>
-<p id="section-8-7">Following the key naming guidance in <span>[<a href="#RFC4962" class="cite xref">RFC4962</a>]</span>, exported key names are:<a href="#section-8-7" class="pilcrow">¶</a></p>
-<div class="lang-pseudocode sourcecode" id="section-8-8">
+<p id="section-8-7">where EAP-Type-Code is the single-octet EAP method type assigned by
+IANA for EAP-PQPAKE.<a href="#section-8-7" class="pilcrow">¶</a></p>
+<p id="section-8-8">Following the key naming guidance in <span>[<a href="#RFC4962" class="cite xref">RFC4962</a>]</span>, exported key names are:<a href="#section-8-8" class="pilcrow">¶</a></p>
+<div class="lang-pseudocode sourcecode" id="section-8-9">
 <pre>
 MSK-name  = Session-ID || "MSK"
 EMSK-name = Session-ID || "EMSK"
-</pre><a href="#section-8-8" class="pilcrow">¶</a>
+</pre><a href="#section-8-9" class="pilcrow">¶</a>
 </div>
-<p id="section-8-9">The MSK and EMSK are derived using HKDF <span>[<a href="#RFC5869" class="cite xref">RFC5869</a>]</span> with the hash
-function selected by the configuration:<a href="#section-8-9" class="pilcrow">¶</a></p>
-<div class="lang-pseudocode sourcecode" id="section-8-10">
+<p id="section-8-10">The MSK and EMSK are derived using HKDF <span>[<a href="#RFC5869" class="cite xref">RFC5869</a>]</span> with the EAP HKDF
+hash selected by the configuration (SHA-256 for the mandatory
+configuration).  <code>Hash.length</code> is that hash's output length in octets:<a href="#section-8-10" class="pilcrow">¶</a></p>
+<div class="lang-pseudocode sourcecode" id="section-8-11">
 <pre>
 exporter_secret = HKDF-Extract(zeros(Hash.length), method_key)
 key_material = HKDF-Expand(exporter_secret,
@@ -1992,14 +2168,17 @@ key_material = HKDF-Expand(exporter_secret,
                            Session-ID ||
                            Method-ID,
                            128)
-MSK  = key_material[0..63]
-EMSK = key_material[64..127]
-</pre><a href="#section-8-10" class="pilcrow">¶</a>
+MSK  = key_material[0:64]
+EMSK = key_material[64:128]
+</pre><a href="#section-8-11" class="pilcrow">¶</a>
 </div>
-<p id="section-8-11">After deriving the MSK and EMSK, both endpoints <span class="bcp14">MUST</span> erase the
+<p id="section-8-12">The slice end indexes are exclusive; MSK and EMSK are each 64 octets.<a href="#section-8-12" class="pilcrow">¶</a></p>
+<p id="section-8-13">After deriving the MSK and EMSK, both endpoints <span class="bcp14">MUST</span> erase the
 CPaceOQUAKE+ method key, intermediate PAKE secrets, KEM decapsulation
-secrets, password-confirmation context, and any password-derived seed.
-The same values <span class="bcp14">MUST</span> be erased when the method fails or times out.<a href="#section-8-11" class="pilcrow">¶</a></p>
+secrets, password-confirmation state, and ephemeral copies of the
+password-derived seed and <code>kem_blind</code>.  This does not erase the server's
+stored registration.  Ephemeral secrets and any unexported candidate
+keys <span class="bcp14">MUST</span> also be erased when the method fails or times out.<a href="#section-8-13" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="security-considerations">
@@ -2010,10 +2189,9 @@ The same values <span class="bcp14">MUST</span> be erased when the method fails 
 <p id="section-9-1">EAP-PQPAKE inherits the cryptographic security properties and limitations
 of CPaceOQUAKE+ <span>[<a href="#I-D.vos-cfrg-pqpake" class="cite xref">I-D.vos-cfrg-pqpake</a>]</span>.  The EAP encapsulation defined
 here binds EAP identities, configuration negotiation, salt, server nonce,
-and all carried CPaceOQUAKE+ messages into the CPaceOQUAKE+ session
-identifier or password-confirmation transcript.  The following claims
-are stated in the style expected for EAP methods used in wireless LANs
-<span>[<a href="#RFC4017" class="cite xref">RFC4017</a>]</span>.<a href="#section-9-1" class="pilcrow">¶</a></p>
+and all carried CPaceOQUAKE+ messages through its public context and
+internal transcript hashes.  The following claims are stated in the
+style expected for EAP methods used in wireless LANs <span>[<a href="#RFC4017" class="cite xref">RFC4017</a>]</span>.<a href="#section-9-1" class="pilcrow">¶</a></p>
 <p id="section-9-2">The hybrid security of CPaceOQUAKE+ depends on the CPaceOQUAKE+
 composition specified in <span>[<a href="#I-D.vos-cfrg-pqpake" class="cite xref">I-D.vos-cfrg-pqpake</a>]</span>.  The sequential
 composition relies on CPace being unconditionally password hiding: the
@@ -2025,96 +2203,118 @@ hybrid design.  EAP-PQPAKE therefore does not define a parallel
 composition and does not permit substituting a different PAKE component
 unless that component is specified by a registered CPaceOQUAKE+
 configuration with an applicable security analysis.<a href="#section-9-2" class="pilcrow">¶</a></p>
-<span class="break"></span><dl class="dlParallel" id="section-9-3">
-        <dt id="section-9-3.1">Passive attacks:</dt>
-        <dd style="margin-left: 1.5em" id="section-9-3.2">
-          <p id="section-9-3.2.1">A passive attacker observing EAP-PQPAKE messages is not expected to
+<p id="section-9-3">Section 11.2 of <span>[<a href="#I-D.vos-cfrg-pqpake" class="cite xref">I-D.vos-cfrg-pqpake</a>]</span> qualifies the post-quantum
+security analysis: the UC proofs use the classical random oracle model.
+OQUAKE-style protocols do not realize the standard UC PAKE
+functionality with quantum random-oracle access under the cited
+analysis, although this does not yield an attack recovering passwords
+or keys and a closely related protocol has a stand-alone game-based
+proof in that model.  EAP-PQPAKE does not claim a stronger quantum UC
+result.  Its security against quantum attackers relies on OQUAKE;
+CPace alone does not provide post-quantum PAKE security.<a href="#section-9-3" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-9-4">
+        <dt id="section-9-4.1">Passive attacks:</dt>
+        <dd style="margin-left: 1.5em" id="section-9-4.2">
+          <p id="section-9-4.2.1">A passive attacker observing EAP-PQPAKE messages is not expected to
 learn the password, the CPaceOQUAKE+ method key, the MSK, or the EMSK.
 The method is intended to protect recorded exchanges against attackers
 with future quantum capabilities, subject to the hybrid security
-assumptions of CPaceOQUAKE+.<a href="#section-9-3.2.1" class="pilcrow">¶</a></p>
+assumptions of CPaceOQUAKE+.<a href="#section-9-4.2.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-9-3.3">Active attacks:</dt>
-        <dd style="margin-left: 1.5em" id="section-9-3.4">
-          <p id="section-9-3.4.1">An active attacker can drop, delay, replay, or modify EAP messages.
+<dt id="section-9-4.3">Active attacks:</dt>
+        <dd style="margin-left: 1.5em" id="section-9-4.4">
+          <p id="section-9-4.4.1">An active attacker can drop, delay, replay, or modify EAP messages.
 Such modification causes transcript or confirmation failure unless the
 attacker knows the password or breaks the underlying CPaceOQUAKE+
 assumptions.  Implementations <span class="bcp14">MUST</span> reject unexpected exchange ordering,
-malformed encodings, and configuration mismatches.<a href="#section-9-3.4.1" class="pilcrow">¶</a></p>
+malformed encodings, and configuration mismatches, while preserving
+OQUAKE's implicit rejection behavior described in <a href="#cpaceoquake-use" class="auto internal xref">Section 4</a>.<a href="#section-9-4.4.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-9-3.5">Dictionary attacks:</dt>
-        <dd style="margin-left: 1.5em" id="section-9-3.6">
-          <p id="section-9-3.6.1">Password authentication methods cannot prevent online guessing.  EAP
+<dt id="section-9-4.5">Dictionary attacks:</dt>
+        <dd style="margin-left: 1.5em" id="section-9-4.6">
+          <p id="section-9-4.6.1">Password authentication methods cannot prevent online guessing.  EAP
 servers <span class="bcp14">MUST</span> implement rate limits or equivalent controls for failed
 authentications.  Implementations <span class="bcp14">SHOULD</span> avoid distinguishable error
-behavior between unknown identities and incorrect passwords.<a href="#section-9-3.6.1" class="pilcrow">¶</a></p>
+behavior between unknown identities and incorrect passwords.<a href="#section-9-4.6.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-9-3.7">Forward secrecy:</dt>
-        <dd style="margin-left: 1.5em" id="section-9-3.8">
-          <p id="section-9-3.8.1">Compromise of the password after an exchange completes does not reveal
+<dt id="section-9-4.7">Forward secrecy:</dt>
+        <dd style="margin-left: 1.5em" id="section-9-4.8">
+          <p id="section-9-4.8.1">Compromise of the password after an exchange completes does not reveal
 earlier MSK or EMSK values unless the attacker also breaks the
-underlying assumptions for the recorded exchange.  Server compromise
-that reveals stored verifiers and password-confirmation KEM public
-keys can enable impersonation according to the CPaceOQUAKE+ security
-model and requires credential reprovisioning.<a href="#section-9-3.8.1" class="pilcrow">¶</a></p>
+underlying assumptions for the recorded exchange.  Compromise of the
+full registered verifier <code>(v, pk, kem_blind)</code> permits offline password
+guessing and server impersonation to the peer.  It does not by itself
+permit client impersonation without recovering the password, the
+password-derived seed, or the corresponding decapsulation key, as
+discussed in Section 11.5 of <span>[<a href="#I-D.vos-cfrg-pqpake" class="cite xref">I-D.vos-cfrg-pqpake</a>]</span>.  Affected
+credentials require reprovisioning.<a href="#section-9-4.8.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-9-3.9">Downgrade protection:</dt>
-        <dd style="margin-left: 1.5em" id="section-9-3.10">
-          <p id="section-9-3.10.1">The selected configuration and the server's offered configuration list
+<dt id="section-9-4.9">Downgrade protection:</dt>
+        <dd style="margin-left: 1.5em" id="section-9-4.10">
+          <p id="section-9-4.10.1">The selected configuration and the server's offered configuration list
 are included in the EAP-PQPAKE transcript.  A downgrade attempt that
 changes negotiation messages is detected during password confirmation.
 Implementations <span class="bcp14">MUST NOT</span> offer configurations that are prohibited by
-local policy.<a href="#section-9-3.10.1" class="pilcrow">¶</a></p>
+local policy.<a href="#section-9-4.10.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-9-3.11">Identity protection:</dt>
-        <dd style="margin-left: 1.5em" id="section-9-3.12">
-          <p id="section-9-3.12.1">EAP-PQPAKE does not encrypt the Start exchange.  A passive observer can
+<dt id="section-9-4.11">Identity protection:</dt>
+        <dd style="margin-left: 1.5em" id="section-9-4.12">
+          <p id="section-9-4.12.1">EAP-PQPAKE does not encrypt the Start exchange.  A passive observer can
 see the server and peer identities unless this method is used inside a
-protected tunnel or the deployment uses privacy-preserving outer
-identities.  Since identities are inputs to CPaceOQUAKE+ verifier
-generation, deployments need a stable identity plan before
-provisioning verifiers.<a href="#section-9-3.12.1" class="pilcrow">¶</a></p>
+protected tunnel.  An anonymous outer EAP identity alone does not hide
+the identities in the Start exchange.  This mapping uses the same
+identities for registration and the session public context; the
+underlying PAKE permits these to differ, but this document does not
+define such an identity mapping.  Changing a registration identity
+requires recomputing and reprovisioning the verifier.<a href="#section-9-4.12.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-9-3.13">Verifier handling:</dt>
-        <dd style="margin-left: 1.5em" id="section-9-3.14">
-          <p id="section-9-3.14.1">The server stores the CPaceOQUAKE+ verifier, salt, and
-password-confirmation KEM public key.  The password-derived seed used
-to derive the password-confirmation KEM key pair <span class="bcp14">MUST NOT</span> be stored by
-the server.  Registration and reprovisioning are outside this method
-and need channel authentication and integrity protection.  The
-memory-hard password stretching used by CPaceOQUAKE+ hardens
+<dt id="section-9-4.13">Verifier handling:</dt>
+        <dd style="margin-left: 1.5em" id="section-9-4.14">
+          <p id="section-9-4.14.1">The server stores the salt and the CPaceOQUAKE+ verifier
+<code>(v, pk, kem_blind)</code>.  The password-derived seed used to derive the
+password-confirmation KEM key pair <span class="bcp14">MUST NOT</span> be stored by the server.
+Registration and reprovisioning are outside this method
+and need channel authentication, confidentiality, and integrity.  A
+fresh secret <code>kem_blind</code> is required for each registration and <span class="bcp14">MUST</span>
+be protected with the rest of the verifier.  The memory-hard password
+stretching used by CPaceOQUAKE+ hardens
 password-derived verifier material against offline guessing after
 verifier compromise; it does not replace online rate limiting for EAP
-authentication attempts.<a href="#section-9-3.14.1" class="pilcrow">¶</a></p>
+authentication attempts.<a href="#section-9-4.14.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-9-3.15">Side channels:</dt>
-        <dd style="margin-left: 1.5em" id="section-9-3.16">
-          <p id="section-9-3.16.1">CPaceOQUAKE+ discusses timing considerations for OQUAKE and ML-KEM
-processing.  EAP-PQPAKE implementations <span class="bcp14">MUST</span> use constant-time
-comparison for confirmation values and <span class="bcp14">SHOULD</span> use implementations of
-the selected primitives that address known timing attacks.<a href="#section-9-3.16.1" class="pilcrow">¶</a></p>
+<dt id="section-9-4.15">Side channels:</dt>
+        <dd style="margin-left: 1.5em" id="section-9-4.16">
+          <p id="section-9-4.16.1">CPaceOQUAKE+ discusses timing considerations for OQUAKE and ML-KEM
+processing.  In addition to the Tempo construction used by OQUAKE,
+the augmented transformation blinds KEM key generation with
+<code>kem_blind</code>.  Removing this blinding or disclosing <code>kem_blind</code> before
+password confirmation invalidates that protection.  Implementations
+<span class="bcp14">MUST</span> preserve the blinding and its encryption, use constant-time
+comparison for confirmation values, and keep Kemeleon.EncodeEk
+randomness secret.  They <span class="bcp14">SHOULD</span> use implementations of the selected
+primitives that address known timing attacks.<a href="#section-9-4.16.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-9-3.17">Denial of service:</dt>
-        <dd style="margin-left: 1.5em" id="section-9-3.18">
-          <p id="section-9-3.18.1">The recommended configuration uses memory-hard password stretching and
-post-quantum cryptography.  Servers <span class="bcp14">SHOULD</span> apply admission control
-before expensive operations, for example by limiting concurrent
-sessions per peer, realm, or lower-layer attachment.<a href="#section-9-3.18.1" class="pilcrow">¶</a></p>
+<dt id="section-9-4.17">Denial of service:</dt>
+        <dd style="margin-left: 1.5em" id="section-9-4.18">
+          <p id="section-9-4.18.1">The recommended configuration uses scrypt password stretching on the
+peer and post-quantum cryptography on both endpoints.  Servers <span class="bcp14">SHOULD</span>
+apply admission control before expensive operations, for example by
+limiting concurrent sessions per peer, realm, or lower-layer attachment.<a href="#section-9-4.18.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-9-3.19">Fragmentation:</dt>
-        <dd style="margin-left: 1.5em" id="section-9-3.20">
-          <p id="section-9-3.20.1">Fragmentation increases buffering requirements.  Implementations <span class="bcp14">MUST</span>
+<dt id="section-9-4.19">Fragmentation:</dt>
+        <dd style="margin-left: 1.5em" id="section-9-4.20">
+          <p id="section-9-4.20.1">Fragmentation increases buffering requirements.  Implementations <span class="bcp14">MUST</span>
 enforce local maximum reassembled lengths and discard incomplete
-fragmented messages on timeout.<a href="#section-9-3.20.1" class="pilcrow">¶</a></p>
+fragmented messages on timeout.<a href="#section-9-4.20.1" class="pilcrow">¶</a></p>
 </dd>
       <dd class="break"></dd>
 </dl>
@@ -2127,8 +2327,8 @@ fragmented messages on timeout.<a href="#section-9-3.20.1" class="pilcrow">¶</a
       </h2>
 <p id="section-10-1">IANA is requested to allocate one EAP Method Type from the "Method Types"
 registry:<a href="#section-10-1" class="pilcrow">¶</a></p>
-<table class="center" id="table-5">
-        <caption><a href="#table-5" class="selfRef">Table 5</a></caption>
+<table class="center" id="table-7">
+        <caption><a href="#table-7" class="selfRef">Table 7</a></caption>
 <thead>
           <tr>
             <th class="text-right" rowspan="1" colspan="1">Value</th>
@@ -2152,8 +2352,8 @@ initial values are listed in <a href="#packet-format" class="auto internal xref"
 The registry contains 16-bit values.  The registration policy is
 Specification Required for values 0x0002 through 0x7fff.  Values 0x8000
 through 0xffff are for Private Use.  The initial contents are:<a href="#section-10-4" class="pilcrow">¶</a></p>
-<table class="center" id="table-6">
-        <caption><a href="#table-6" class="selfRef">Table 6</a></caption>
+<table class="center" id="table-8">
+        <caption><a href="#table-8" class="selfRef">Table 8</a></caption>
 <thead>
           <tr>
             <th class="text-right" rowspan="1" colspan="1">Value</th>
@@ -2169,7 +2369,7 @@ through 0xffff are for Private Use.  The initial contents are:<a href="#section-
           </tr>
           <tr>
             <td class="text-right" rowspan="1" colspan="1">0x0001</td>
-            <td class="text-left" rowspan="1" colspan="1">PQPAKE-XWING-MLBUASKEM1024-CPACE-RISTRETTO255-HKDFSHA256-ARGON2ID</td>
+            <td class="text-left" rowspan="1" colspan="1">cpaceoquakeplus-x25519-mlbuaskem1024-xwing</td>
             <td class="text-left" rowspan="1" colspan="1">RFC-TBD</td>
           </tr>
         </tbody>
@@ -2199,7 +2399,7 @@ are listed in <a href="#failure-payload" class="auto internal xref">Section 6.7<
 <dl class="references">
 <dt id="I-D.vos-cfrg-pqpake">[I-D.vos-cfrg-pqpake]</dt>
         <dd>
-<span class="refAuthor">Vos, J.</span>, <span class="refAuthor">Jarecki, S.</span>, and <span class="refAuthor">C. A. Wood</span>, <span class="refTitle">"Hybrid Post-Quantum Password Authenticated Key Exchange"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-vos-cfrg-pqpake-01</span>, <time datetime="2026-04-01" class="refDate">1 April 2026</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-vos-cfrg-pqpake-01">https://datatracker.ietf.org/doc/html/draft-vos-cfrg-pqpake-01</a>&gt;</span>. </dd>
+<span class="refAuthor">Vos, J.</span>, <span class="refAuthor">Jarecki, S.</span>, and <span class="refAuthor">C. A. Wood</span>, <span class="refTitle">"Hybrid Post-Quantum Password Authenticated Key Exchange"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-vos-cfrg-pqpake-03</span>, <time datetime="2026-10-14" class="refDate">14 October 2026</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-vos-cfrg-pqpake-03">https://datatracker.ietf.org/doc/html/draft-vos-cfrg-pqpake-03</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC2119">[RFC2119]</dt>
         <dd>
@@ -2217,17 +2417,17 @@ are listed in <a href="#failure-payload" class="auto internal xref">Section 6.7<
         <dd>
 <span class="refAuthor">Krawczyk, H.</span> and <span class="refAuthor">P. Eronen</span>, <span class="refTitle">"HMAC-based Extract-and-Expand Key Derivation Function (HKDF)"</span>, <span class="seriesInfo">RFC 5869</span>, <span class="seriesInfo">DOI 10.17487/RFC5869</span>, <time datetime="2010-05" class="refDate">May 2010</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc5869">https://www.rfc-editor.org/rfc/rfc5869</a>&gt;</span>. </dd>
 <dd class="break"></dd>
+<dt id="RFC7914">[RFC7914]</dt>
+        <dd>
+<span class="refAuthor">Percival, C.</span> and <span class="refAuthor">S. Josefsson</span>, <span class="refTitle">"The scrypt Password-Based Key Derivation Function"</span>, <span class="seriesInfo">RFC 7914</span>, <span class="seriesInfo">DOI 10.17487/RFC7914</span>, <time datetime="2016-08" class="refDate">August 2016</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc7914">https://www.rfc-editor.org/rfc/rfc7914</a>&gt;</span>. </dd>
+<dd class="break"></dd>
 <dt id="RFC8126">[RFC8126]</dt>
         <dd>
 <span class="refAuthor">Cotton, M.</span>, <span class="refAuthor">Leiba, B.</span>, and <span class="refAuthor">T. Narten</span>, <span class="refTitle">"Guidelines for Writing an IANA Considerations Section in RFCs"</span>, <span class="seriesInfo">BCP 26</span>, <span class="seriesInfo">RFC 8126</span>, <span class="seriesInfo">DOI 10.17487/RFC8126</span>, <time datetime="2017-06" class="refDate">June 2017</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8126">https://www.rfc-editor.org/rfc/rfc8126</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC8174">[RFC8174]</dt>
-        <dd>
-<span class="refAuthor">Leiba, B.</span>, <span class="refTitle">"Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 8174</span>, <span class="seriesInfo">DOI 10.17487/RFC8174</span>, <time datetime="2017-05" class="refDate">May 2017</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8174">https://www.rfc-editor.org/rfc/rfc8174</a>&gt;</span>. </dd>
-<dd class="break"></dd>
-<dt id="RFC9106">[RFC9106]</dt>
       <dd>
-<span class="refAuthor">Biryukov, A.</span>, <span class="refAuthor">Dinu, D.</span>, <span class="refAuthor">Khovratovich, D.</span>, and <span class="refAuthor">S. Josefsson</span>, <span class="refTitle">"Argon2 Memory-Hard Function for Password Hashing and Proof-of-Work Applications"</span>, <span class="seriesInfo">RFC 9106</span>, <span class="seriesInfo">DOI 10.17487/RFC9106</span>, <time datetime="2021-09" class="refDate">September 2021</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9106">https://www.rfc-editor.org/rfc/rfc9106</a>&gt;</span>. </dd>
+<span class="refAuthor">Leiba, B.</span>, <span class="refTitle">"Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 8174</span>, <span class="seriesInfo">DOI 10.17487/RFC8174</span>, <time datetime="2017-05" class="refDate">May 2017</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8174">https://www.rfc-editor.org/rfc/rfc8174</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 </dl>
 </section>
@@ -2269,8 +2469,8 @@ are listed in <a href="#failure-payload" class="auto internal xref">Section 6.7<
 </div>
 <div id="authors-addresses">
 <section id="appendix-B">
-      <h2 id="name-authors-address">
-<a href="#name-authors-address" class="section-name selfRef">Author's Address</a>
+      <h2 id="name-authors-addresses">
+<a href="#name-authors-addresses" class="section-name selfRef">Authors' Addresses</a>
       </h2>
 <address class="vcard">
         <div dir="auto" class="left"><span class="fn nameRole">Hannes Tschofenig</span></div>
@@ -2282,6 +2482,22 @@ are listed in <a href="#failure-payload" class="auto internal xref">Section 6.7<
 <div class="email">
 <span>Email:</span>
 <a href="mailto:hannes.tschofenig@gmx.net" class="email">hannes.tschofenig@gmx.net</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Tirumaleswar Reddy</span></div>
+<div dir="auto" class="left"><span class="org">Nokia</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:kondtir@gmail.com" class="email">kondtir@gmail.com</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Dan Harkins</span></div>
+<div dir="auto" class="left"><span class="org">Hewlett-Packard Enterprise</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:daniel.harkins@hpe.com" class="email">daniel.harkins@hpe.com</a>
 </div>
 </address>
 </section>
