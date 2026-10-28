@@ -5,10 +5,10 @@
 EAP Method Update                                          H. Tschofenig
 Internet-Draft                                                  UniBw M.
 Intended status: Experimental                                   T. Reddy
-Expires: 27 April 2027                                             Nokia
+Expires: 1 May 2027                                                Nokia
                                                               D. Harkins
                                               Hewlett-Packard Enterprise
-                                                         24 October 2026
+                                                         28 October 2026
 
 
                   The EAP-PQPAKE Authentication Method
@@ -56,7 +56,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 27 April 2027.
+   This Internet-Draft will expire on 1 May 2027.
 
 Copyright Notice
 
@@ -137,6 +137,11 @@ Table of Contents
    the server also stores the salt, configuration, and registration
    identities.  Registration MUST authenticate the server and protect
    the confidentiality and integrity of the verifier material.
+
+   Either endpoint may derive the verifier: a server configured with the
+   password derives it and erases the password, or the peer derives it
+   and uploads it using the protected registration procedure described
+   above.  The peer stores no persistent verifier state.
 
    Note: This document version is experimental and relies on a work in
    progress PAKE algorithm.
