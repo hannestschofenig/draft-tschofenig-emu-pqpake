@@ -108,6 +108,11 @@ the server also stores the salt, configuration, and registration
 identities.  Registration MUST authenticate the server and protect the
 confidentiality and integrity of the verifier material.
 
+Either endpoint may derive the verifier: a server configured with the
+password derives it and erases the password, or the peer derives it and
+uploads it using the protected registration procedure described above.
+The peer stores no persistent verifier state.
+
 Note: This document version is experimental and relies on a
 work in progress PAKE algorithm.
 
